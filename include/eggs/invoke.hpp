@@ -310,4 +310,4 @@ namespace eggs
 
 }    // namespace eggs
 
-#endif EGGS_INVOKE_HPP
+#endif /*EGGS_INVOKE_HPP*/
