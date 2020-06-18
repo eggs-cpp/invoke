@@ -1,6 +1,8 @@
 **Eggs.Invoke**
 ==================
 
+![](https://github.com/eggs-cpp/invoke/workflows/Eggs.Invoke%20CI/badge.svg?branch=master)
+
 ## Introduction ##
 
 **Eggs.Invoke** is a **C++17** implementation of `INVOKE` and its related
