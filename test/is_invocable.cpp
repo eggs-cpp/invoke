@@ -17,29 +17,32 @@
 #define CHECK(...) assert((__VA_ARGS__))
 #endif
 
+// Account for P0012: "Make exception specifications be part of the type system".
+static constexpr bool p0012 = !std::is_same<void(), void() noexcept>::value;
+
 struct C
 {
-    int fun(int) noexcept
+    int fun(int) noexcept(p0012)
     {
         return 0;
     }
-    int cfun(int) const noexcept
+    int cfun(int) const noexcept(p0012)
     {
         return 1;
     }
-    int lfun(int) & noexcept
+    int lfun(int) & noexcept(p0012)
     {
         return 2;
     }
-    int rfun(int) && noexcept
+    int rfun(int) && noexcept(p0012)
     {
         return 3;
     }
-    int clfun(int) const& noexcept
+    int clfun(int) const& noexcept(p0012)
     {
         return 4;
     }
-    int crfun(int) const&& noexcept
+    int crfun(int) const&& noexcept(p0012)
     {
         return 5;
     }
@@ -74,6 +77,7 @@ using conv_from_throws = conv_from<T, false>;
 
 std::true_type const nothrows{};
 std::false_type const throws{};
+std::integral_constant<bool, p0012> const p0012_nothrows{};
 
 template <typename R, typename F, typename... Args, bool IsNothrow,
     bool IsNothrowR = IsNothrow>
@@ -89,13 +93,13 @@ void check_invocable(std::integral_constant<bool, IsNothrow>,
     CHECK(std::is_base_of<std::true_type,
         eggs::is_invocable_r<void const, F, Args...>>::value);
 
-    CHECK(std::is_base_of<std::bool_constant<IsNothrow>,
+    CHECK(std::is_base_of<std::integral_constant<bool, IsNothrow>,
         eggs::is_nothrow_invocable<F, Args...>>::value);
-    CHECK(std::is_base_of<std::bool_constant<IsNothrowR>,
+    CHECK(std::is_base_of<std::integral_constant<bool, IsNothrowR>,
         eggs::is_nothrow_invocable_r<R, F, Args...>>::value);
-    CHECK(std::is_base_of<std::bool_constant<IsNothrow>,
+    CHECK(std::is_base_of<std::integral_constant<bool, IsNothrow>,
         eggs::is_nothrow_invocable_r<void, F, Args...>>::value);
-    CHECK(std::is_base_of<std::bool_constant<IsNothrow>,
+    CHECK(std::is_base_of<std::integral_constant<bool, IsNothrow>,
         eggs::is_nothrow_invocable_r<void const, F, Args...>>::value);
 }
 
@@ -122,23 +126,23 @@ int main()
     /* mem-fun-ptr */ {
         using Fn = decltype(&C::fun);
 
-        check_invocable<int, Fn, C&, int>(nothrows);
+        check_invocable<int, Fn, C&, int>(p0012_nothrows);
         check_not_invocable<Fn, C const&, int>();
-        check_invocable<int, Fn, C&&, int>(nothrows);
+        check_invocable<int, Fn, C&&, int>(p0012_nothrows);
         check_not_invocable<Fn, C const&&, int>();
 
-        check_invocable<int, Fn, D&, int>(nothrows);
+        check_invocable<int, Fn, D&, int>(p0012_nothrows);
         check_not_invocable<Fn, D const&, int>();
-        check_invocable<int, Fn, D&&, int>(nothrows);
+        check_invocable<int, Fn, D&&, int>(p0012_nothrows);
         check_not_invocable<Fn, D const&&, int>();
 
-        check_invocable<int, Fn, std::reference_wrapper<C>, int>(nothrows);
+        check_invocable<int, Fn, std::reference_wrapper<C>, int>(p0012_nothrows);
         check_not_invocable<Fn, std::reference_wrapper<C const>, int>();
 
-        check_invocable<int, Fn, C*, int>(nothrows);
+        check_invocable<int, Fn, C*, int>(p0012_nothrows);
         check_not_invocable<Fn, C const*, int>();
 
-        check_invocable<int, Fn, smart_ptr<C>, int>(nothrows);
+        check_invocable<int, Fn, smart_ptr<C>, int>(p0012_nothrows);
         check_not_invocable<Fn, smart_ptr<C const>, int>();
 
         check_invocable<int, Fn, smart_ptr_throws<C>, int>(throws);
@@ -150,14 +154,14 @@ int main()
 
         using Fnc = decltype(&C::cfun);
 
-        check_invocable<int, Fnc, C&, int>(nothrows);
-        check_invocable<int, Fnc, C const&, int>(nothrows);
-        check_invocable<int, Fnc, C&&, int>(nothrows);
-        check_invocable<int, Fnc, C const&&, int>(nothrows);
+        check_invocable<int, Fnc, C&, int>(p0012_nothrows);
+        check_invocable<int, Fnc, C const&, int>(p0012_nothrows);
+        check_invocable<int, Fnc, C&&, int>(p0012_nothrows);
+        check_invocable<int, Fnc, C const&&, int>(p0012_nothrows);
 
         using Fnl = decltype(&C::lfun);
 
-        check_invocable<int, Fnl, C&, int>(nothrows);
+        check_invocable<int, Fnl, C&, int>(p0012_nothrows);
         check_not_invocable<Fnl, C const&, int>();
         check_not_invocable<Fnl, C&&, int>();
         check_not_invocable<Fnl, C const&&, int>();
@@ -166,16 +170,16 @@ int main()
 
         check_not_invocable<Fnr, C&, int>();
         check_not_invocable<Fnr, C const&, int>();
-        check_invocable<int, Fnr, C&&, int>(nothrows);
+        check_invocable<int, Fnr, C&&, int>(p0012_nothrows);
         check_not_invocable<Fnr, C const&&, int>();
 
         using Fncl = decltype(&C::clfun);
 
-        check_invocable<int, Fncl, C&, int>(nothrows);
-        check_invocable<int, Fncl, C const&, int>(nothrows);
+        check_invocable<int, Fncl, C&, int>(p0012_nothrows);
+        check_invocable<int, Fncl, C const&, int>(p0012_nothrows);
 #if __cplusplus > 201703L || defined(_MSC_VER)  // C++20: P0704
-        check_invocable<int, Fncl, C&&, int>(nothrows);
-        check_invocable<int, Fncl, C const&&, int>(nothrows);
+        check_invocable<int, Fncl, C&&, int>(p0012_nothrows);
+        check_invocable<int, Fncl, C const&&, int>(p0012_nothrows);
 #else
         check_not_invocable<Fncl, C&&, int>();
         check_not_invocable<Fncl, C const&&, int>();
@@ -185,8 +189,8 @@ int main()
 
         check_not_invocable<Fncr, C&, int>();
         check_not_invocable<Fncr, C const&, int>();
-        check_invocable<int, Fncr, C&&, int>(nothrows);
-        check_invocable<int, Fncr, C const&&, int>(nothrows);
+        check_invocable<int, Fncr, C&&, int>(p0012_nothrows);
+        check_invocable<int, Fncr, C const&&, int>(p0012_nothrows);
     }
 
     /* mem-obj-ptr */ {
@@ -241,13 +245,13 @@ int main()
 
         struct S
         {
-            static int f(int) noexcept
+            static int f(int) noexcept(p0012)
             {
                 return 0;
             }
         };
         using Fn_ptr = decltype(&S::f);
 
-        check_invocable<int, Fn_ptr, int>(nothrows);
+        check_invocable<int, Fn_ptr, int>(p0012_nothrows);
     }
 }

@@ -3,7 +3,7 @@
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-name: Eggs.Invoke CI
+name: Eggs.Invoke C++17
 
 on:
   push:
@@ -13,7 +13,7 @@ on:
       - 'CMakeLists.txt'
       - 'include/*'
       - 'test/*'
-      - '.github/workflows/invoke-ci.yml'
+      - '.github/workflows/invoke-ci-cxx17.yml'
   pull_request:
 
 defaults:

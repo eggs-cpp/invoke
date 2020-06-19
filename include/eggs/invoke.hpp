@@ -150,8 +150,8 @@ namespace eggs { namespace detail
         static constexpr auto call(F&& f, Args&&... args)
             noexcept(noexcept(
                 EGGS_INVOKE(std::forward<F>(f), std::forward<Args>(args)...)))
-         -> std::void_t<decltype(
-                EGGS_INVOKE(std::forward<F>(f), std::forward<Args>(args)...))>
+         -> decltype(static_cast<void>(
+                EGGS_INVOKE(std::forward<F>(f), std::forward<Args>(args)...)))
         {
             return static_cast<void>(
                 EGGS_INVOKE(std::forward<F>(f), std::forward<Args>(args)...));
@@ -173,8 +173,8 @@ namespace eggs
         {};
 
         template <typename F, typename... Ts>
-        struct invoke_result_impl<F(Ts...), std::void_t<decltype(
-            EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>>
+        struct invoke_result_impl<F(Ts...), decltype((void)
+            EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>
         {
             using type = decltype(
                 EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...));
@@ -199,8 +199,8 @@ namespace eggs
         {};
 
         template <typename F, typename... Ts>
-        struct is_invocable_impl<F(Ts...), std::void_t<decltype(
-            EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>>
+        struct is_invocable_impl<F(Ts...), decltype((void)
+            EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>
           : std::true_type
         {};
     }
@@ -211,7 +211,10 @@ namespace eggs
     {};
 
     template <typename Fn, typename... ArgTypes>
-    inline constexpr bool is_invocable_v =
+#if __cpp_inline_variables
+    inline
+#endif
+    constexpr bool is_invocable_v =
         is_invocable<Fn, ArgTypes...>::value;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -223,8 +226,8 @@ namespace eggs
         {};
 
         template <typename F, typename... Ts, typename R>
-        struct is_invocable_r_impl<F(Ts...), R, std::void_t<decltype(
-            EGGS_INVOKE_R(R, std::declval<F>(), std::declval<Ts>()...))>>
+        struct is_invocable_r_impl<F(Ts...), R, decltype((void)
+            EGGS_INVOKE_R(R, std::declval<F>(), std::declval<Ts>()...))>
           : std::true_type
         {};
     }
@@ -235,7 +238,10 @@ namespace eggs
     {};
 
     template <typename R, typename Fn, typename... ArgTypes>
-    inline constexpr bool is_invocable_r_v =
+#if __cpp_inline_variables
+    inline
+#endif
+    constexpr bool is_invocable_r_v =
         is_invocable_r<R, Fn, ArgTypes...>::value;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -247,9 +253,9 @@ namespace eggs
         {};
 
         template <typename F, typename... Ts>
-        struct is_nothrow_invocable_impl<F(Ts...), std::void_t<decltype(
-            EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>>
-          : std::bool_constant<noexcept(
+        struct is_nothrow_invocable_impl<F(Ts...), decltype((void)
+            EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>
+          : std::integral_constant<bool, noexcept(
                 EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>
         {};
     }
@@ -260,7 +266,10 @@ namespace eggs
     {};
 
     template <typename Fn, typename... ArgTypes>
-    inline constexpr bool is_nothrow_invocable_v =
+#if __cpp_inline_variables
+    inline
+#endif
+    constexpr bool is_nothrow_invocable_v =
         is_nothrow_invocable<Fn, ArgTypes...>::value;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -272,9 +281,9 @@ namespace eggs
         {};
 
         template <typename F, typename... Ts, typename R>
-        struct is_nothrow_invocable_r_impl<F(Ts...), R, std::void_t<decltype(
-            EGGS_INVOKE_R(R, std::declval<F>(), std::declval<Ts>()...))>>
-          : std::bool_constant<noexcept(
+        struct is_nothrow_invocable_r_impl<F(Ts...), R, decltype((void)
+            EGGS_INVOKE_R(R, std::declval<F>(), std::declval<Ts>()...))>
+          : std::integral_constant<bool, noexcept(
                 EGGS_INVOKE_R(R, std::declval<F>(), std::declval<Ts>()...))>
         {};
     }
@@ -285,7 +294,10 @@ namespace eggs
     {};
 
     template <typename R, typename Fn, typename... ArgTypes>
-    inline constexpr bool is_nothrow_invocable_r_v =
+#if __cpp_inline_variables
+    inline
+#endif
+    constexpr bool is_nothrow_invocable_r_v =
         is_nothrow_invocable_r<R, Fn, ArgTypes...>::value;
 
     ///////////////////////////////////////////////////////////////////////////

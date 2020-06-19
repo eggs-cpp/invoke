@@ -23,6 +23,9 @@
 //   invoke_result_t<F, Args...> invoke(F&& f, Args&&... args)
 //     noexcept(is_nothrow_invocable_v<F, Args...>);
 
+// Account for P0012: "Make exception specifications be part of the type system".
+static constexpr bool p0012 = !std::is_same<void(), void() noexcept>::value;
+
 struct C
 {
     int obj;
@@ -31,27 +34,27 @@ struct C
     {
     }
 
-    int fun(int base) noexcept
+    int fun(int base) noexcept(p0012)
     {
         return base + 0;
     }
-    int cfun(int base) const noexcept
+    int cfun(int base) const noexcept(p0012)
     {
         return base + 1;
     }
-    int lfun(int base) & noexcept
+    int lfun(int base) & noexcept(p0012)
     {
         return base + 2;
     }
-    int rfun(int base) && noexcept
+    int rfun(int base) && noexcept(p0012)
     {
         return base + 3;
     }
-    int clfun(int base) const& noexcept
+    int clfun(int base) const& noexcept(p0012)
     {
         return base + 4;
     }
-    int crfun(int base) const&& noexcept
+    int crfun(int base) const&& noexcept(p0012)
     {
         return base + 5;
     }
@@ -85,6 +88,7 @@ using conv_to_throws = conv_to<T, false>;
 
 std::true_type const nothrows{};
 std::false_type const throws{};
+std::integral_constant<bool, p0012> const p0012_nothrows{};
 
 template <typename T>
 T const* addressof(T const& ref)
@@ -192,27 +196,27 @@ void test_mem_fun_ptr()
         C& r = x;
         C const& cr = x;
 
-        check_invoke_fun(r.fun(40), nothrows, f, r, 40);
-        check_invoke_fun(r.cfun(40), nothrows, cf, r, 40);
-        check_invoke_fun(r.lfun(40), nothrows, lf, r, 40);
-        check_invoke_fun(r.clfun(40), nothrows, clf, r, 40);
+        check_invoke_fun(r.fun(40), p0012_nothrows, f, r, 40);
+        check_invoke_fun(r.cfun(40), p0012_nothrows, cf, r, 40);
+        check_invoke_fun(r.lfun(40), p0012_nothrows, lf, r, 40);
+        check_invoke_fun(r.clfun(40), p0012_nothrows, clf, r, 40);
 
-        check_invoke_fun(cr.cfun(40), nothrows, cf, cr, 40);
-        check_invoke_fun(cr.clfun(40), nothrows, clf, cr, 40);
+        check_invoke_fun(cr.cfun(40), p0012_nothrows, cf, cr, 40);
+        check_invoke_fun(cr.clfun(40), p0012_nothrows, clf, cr, 40);
 
-        check_invoke_fun(std::move(r).fun(40), nothrows, f, std::move(r), 40);
-        check_invoke_fun(std::move(r).cfun(40), nothrows, cf, std::move(r), 40);
+        check_invoke_fun(std::move(r).fun(40), p0012_nothrows, f, std::move(r), 40);
+        check_invoke_fun(std::move(r).cfun(40), p0012_nothrows, cf, std::move(r), 40);
 #if __cplusplus > 201703L || defined(_MSC_VER) // C++20: P0704
-        check_invoke_fun(std::move(r).clfun(40), nothrows, clf, std::move(r), 40);
+        check_invoke_fun(std::move(r).clfun(40), p0012_nothrows, clf, std::move(r), 40);
 #endif
-        check_invoke_fun(std::move(r).rfun(40), nothrows, rf, std::move(r), 40);
-        check_invoke_fun(std::move(r).crfun(40), nothrows, crf, std::move(r), 40);
+        check_invoke_fun(std::move(r).rfun(40), p0012_nothrows, rf, std::move(r), 40);
+        check_invoke_fun(std::move(r).crfun(40), p0012_nothrows, crf, std::move(r), 40);
 
-        check_invoke_fun(std::move(cr).cfun(40), nothrows, cf, std::move(cr), 40);
+        check_invoke_fun(std::move(cr).cfun(40), p0012_nothrows, cf, std::move(cr), 40);
 #if __cplusplus > 201703L || defined(_MSC_VER)  // C++20: P0704
-        check_invoke_fun(std::move(cr).clfun(40), nothrows, clf, std::move(cr), 40);
+        check_invoke_fun(std::move(cr).clfun(40), p0012_nothrows, clf, std::move(cr), 40);
 #endif
-        check_invoke_fun(std::move(cr).crfun(40), nothrows, crf, std::move(cr), 40);
+        check_invoke_fun(std::move(cr).crfun(40), p0012_nothrows, crf, std::move(cr), 40);
     }
 
     /* reference wrapper */ {
@@ -220,13 +224,13 @@ void test_mem_fun_ptr()
         std::reference_wrapper<C> r = x;
         std::reference_wrapper<C const> cr = x;
 
-        check_invoke_fun(r.get().fun(40), nothrows, f, r, 40);
-        check_invoke_fun(r.get().cfun(40), nothrows, cf, r, 40);
-        check_invoke_fun(r.get().lfun(40), nothrows, lf, r, 40);
-        check_invoke_fun(r.get().clfun(40), nothrows, clf, r, 40);
+        check_invoke_fun(r.get().fun(40), p0012_nothrows, f, r, 40);
+        check_invoke_fun(r.get().cfun(40), p0012_nothrows, cf, r, 40);
+        check_invoke_fun(r.get().lfun(40), p0012_nothrows, lf, r, 40);
+        check_invoke_fun(r.get().clfun(40), p0012_nothrows, clf, r, 40);
 
-        check_invoke_fun(cr.get().cfun(40), nothrows, cf, cr, 40);
-        check_invoke_fun(cr.get().clfun(40), nothrows, clf, cr, 40);
+        check_invoke_fun(cr.get().cfun(40), p0012_nothrows, cf, cr, 40);
+        check_invoke_fun(cr.get().clfun(40), p0012_nothrows, clf, cr, 40);
     }
 
     /* pointer */ {
@@ -234,13 +238,13 @@ void test_mem_fun_ptr()
         C* p = &x;
         C const* cp = &x;
 
-        check_invoke_fun((*p).fun(40), nothrows, f, p, 40);
-        check_invoke_fun((*p).cfun(40), nothrows, cf, p, 40);
-        check_invoke_fun((*p).lfun(40), nothrows, lf, p, 40);
-        check_invoke_fun((*p).clfun(40), nothrows, clf, p, 40);
+        check_invoke_fun((*p).fun(40), p0012_nothrows, f, p, 40);
+        check_invoke_fun((*p).cfun(40), p0012_nothrows, cf, p, 40);
+        check_invoke_fun((*p).lfun(40), p0012_nothrows, lf, p, 40);
+        check_invoke_fun((*p).clfun(40), p0012_nothrows, clf, p, 40);
 
-        check_invoke_fun((*cp).cfun(40), nothrows, cf, cp, 40);
-        check_invoke_fun((*cp).clfun(40), nothrows, clf, cp, 40);
+        check_invoke_fun((*cp).cfun(40), p0012_nothrows, cf, cp, 40);
+        check_invoke_fun((*cp).clfun(40), p0012_nothrows, clf, cp, 40);
     }
 
     /* smart pointer */ {
@@ -248,13 +252,13 @@ void test_mem_fun_ptr()
         smart_ptr<C> p = &x;
         smart_ptr<C const> cp = &x;
 
-        check_invoke_fun((*p).fun(40), nothrows, f, p, 40);
-        check_invoke_fun((*p).cfun(40), nothrows, cf, p, 40);
-        check_invoke_fun((*p).lfun(40), nothrows, lf, p, 40);
-        check_invoke_fun((*p).clfun(40), nothrows, clf, p, 40);
+        check_invoke_fun((*p).fun(40), p0012_nothrows, f, p, 40);
+        check_invoke_fun((*p).cfun(40), p0012_nothrows, cf, p, 40);
+        check_invoke_fun((*p).lfun(40), p0012_nothrows, lf, p, 40);
+        check_invoke_fun((*p).clfun(40), p0012_nothrows, clf, p, 40);
 
-        check_invoke_fun((*cp).cfun(40), nothrows, cf, cp, 40);
-        check_invoke_fun((*cp).clfun(40), nothrows, clf, cp, 40);
+        check_invoke_fun((*cp).cfun(40), p0012_nothrows, cf, cp, 40);
+        check_invoke_fun((*cp).clfun(40), p0012_nothrows, clf, cp, 40);
 
         smart_ptr_throws<C> tp = &x;
         smart_ptr_throws<C const> tcp = &x;
@@ -290,14 +294,14 @@ void test_fun_obj()
     /* fun-ptr */ {
         struct S
         {
-            static int f(int base) noexcept
+            static int f(int base) noexcept(p0012)
             {
                 return base + 7;
             }
         };
         auto f = &S::f;
 
-        check_invoke_fun(f(40), nothrows, f, 40);
+        check_invoke_fun(f(40), p0012_nothrows, f, 40);
     }
 }
 
