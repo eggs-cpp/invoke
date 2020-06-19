@@ -210,12 +210,14 @@ namespace eggs
       : detail::is_invocable_impl<Fn&&(ArgTypes&&...)>::type
     {};
 
+#if __cpp_variable_templates
     template <typename Fn, typename... ArgTypes>
 #if __cpp_inline_variables
     inline
 #endif
     constexpr bool is_invocable_v =
         is_invocable<Fn, ArgTypes...>::value;
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
     namespace detail
@@ -237,12 +239,14 @@ namespace eggs
       : detail::is_invocable_r_impl<Fn&&(ArgTypes&&...), R>::type
     {};
 
+#if __cpp_variable_templates
     template <typename R, typename Fn, typename... ArgTypes>
 #if __cpp_inline_variables
     inline
 #endif
     constexpr bool is_invocable_r_v =
         is_invocable_r<R, Fn, ArgTypes...>::value;
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
     namespace detail
@@ -265,12 +269,14 @@ namespace eggs
       : detail::is_nothrow_invocable_impl<Fn&&(ArgTypes&&...)>::type
     {};
 
+#if __cpp_variable_templates
     template <typename Fn, typename... ArgTypes>
 #if __cpp_inline_variables
     inline
 #endif
     constexpr bool is_nothrow_invocable_v =
         is_nothrow_invocable<Fn, ArgTypes...>::value;
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
     namespace detail
@@ -293,18 +299,20 @@ namespace eggs
       : detail::is_nothrow_invocable_r_impl<Fn&&(ArgTypes&&...), R>::type
     {};
 
+#if __cpp_variable_templates
     template <typename R, typename Fn, typename... ArgTypes>
 #if __cpp_inline_variables
     inline
 #endif
     constexpr bool is_nothrow_invocable_r_v =
         is_nothrow_invocable_r<R, Fn, ArgTypes...>::value;
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
     template <typename Fn, typename... ArgTypes>
     constexpr invoke_result_t<Fn, ArgTypes...>
     invoke(Fn&& f, ArgTypes&&... args)
-        noexcept(is_nothrow_invocable_v<Fn, ArgTypes...>)
+        noexcept(is_nothrow_invocable<Fn, ArgTypes...>::value)
     {
         return EGGS_INVOKE(
             std::forward<Fn>(f), std::forward<ArgTypes>(args)...);
@@ -314,7 +322,7 @@ namespace eggs
         typename Enable = invoke_result_t<Fn, ArgTypes...>>
     constexpr R
     invoke_r(Fn&& f, ArgTypes&&... args)
-        noexcept(is_nothrow_invocable_v<Fn, ArgTypes...>)
+        noexcept(is_nothrow_invocable<Fn, ArgTypes...>::value)
     {
         return EGGS_INVOKE_R(
             R, std::forward<Fn>(f), std::forward<ArgTypes>(args)...);

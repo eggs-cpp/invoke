@@ -1,0 +1,95 @@
+# Copyright Agustin K-ballo Berge, Fusion Fenix 2020
+#
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+name: Eggs.Invoke C++11
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'CMakeLists.txt'
+      - 'include/*'
+      - 'test/*'
+      - '.github/workflows/invoke-ci-cxx11.yml'
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }} - ${{ matrix.build_type }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+            name: "Linux GCC 9",
+            os: ubuntu-latest,
+            generator: Ninja,
+            cc: "gcc-9", cxx: "g++-9",
+            cxxflags: "-Wall -Wextra -Werror"
+          }
+        - {
+            name: "Linux Clang 9",
+            os: ubuntu-latest,
+            generator: Ninja,
+            cc: "clang-9", cxx: "clang++-9",
+            cxxflags: "-Wall -Wextra -Werror"
+          }
+        - {
+            name: "macOS GCC",
+            os: macos-latest,
+            generator: Ninja,
+            cc: "gcc", cxx: "g++",
+            cxxflags: "-Wall -Wextra -Werror"
+          }
+        - {
+            name: "macOS Clang",
+            os: macos-latest,
+            generator: Ninja,
+            cc: "clang", cxx: "clang++",
+            cxxflags: "-Wall -Wextra -Werror"
+          }
+        - {
+            name: "Windows MSVC 2019",
+            os: windows-latest,
+            generator: Visual Studio 16 2019,
+            cc: "cl", cxx: "cl",
+            cxxflags: "-W4 -WX -permissive-"
+          }
+        build_type: [Debug, Release]
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - uses: seanmiddleditch/gha-setup-ninja@master
+
+    - name: Configure
+      env:
+        CC: ${{ matrix.config.cc }}
+        CXX: ${{ matrix.config.cxx }}
+        CXXFLAGS: ${{ matrix.config.cxxflags }}
+      run: |
+        mkdir build
+        cd build
+        cmake -G"${{ matrix.config.generator }}" \
+            -DCMAKE_CXX_STANDARD=11 \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            ..
+
+    - name: Build
+      working-directory: build
+      run: |
+        cmake --build . --config ${{ matrix.build_type }}
+
+    - name: Test
+      working-directory: build
+      run: |
+        ctest --build-config ${{ matrix.build_type }} --output-on-failure

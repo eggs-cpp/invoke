@@ -3,11 +3,12 @@
 
 ## Introduction ##
 
-**Eggs.Invoke** is a **C++14/17** implementation of `INVOKE` and its related
+**Eggs.Invoke** is a **C++11/14/17** implementation of `INVOKE` and its related
 facilities.
 
 ## CI Status ##
 
+- C++11: ![](https://github.com/eggs-cpp/invoke/workflows/Eggs.Invoke%20C++11/badge.svg?branch=master)
 - C++14: ![](https://github.com/eggs-cpp/invoke/workflows/Eggs.Invoke%20C++14/badge.svg?branch=master)
 - C++17: ![](https://github.com/eggs-cpp/invoke/workflows/Eggs.Invoke%20C++17/badge.svg?branch=master)
 
