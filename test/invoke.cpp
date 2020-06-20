@@ -304,4 +304,6 @@ int main()
     test_mem_obj_ptr();
     test_mem_fun_ptr();
     test_fun_obj();
+
+    return test_report();
 }

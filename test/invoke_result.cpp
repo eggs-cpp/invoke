@@ -164,4 +164,6 @@ int main()
         CHECK(std::is_same<eggs::invoke_result_t<int (*)(int), int>,
             typename eggs::invoke_result<int (*)(int), int>::type>::value);
     }
+
+    return test_report();
 }

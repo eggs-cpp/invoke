@@ -249,4 +249,6 @@ int main()
 
         CHECK_SCOPE(test_invocable<int, Fn_ptr, int>(p0012_nothrows));
     }
+
+    return test_report();
 }

@@ -8,6 +8,7 @@
 #ifndef TEST_HPP
 #define TEST_HPP
 
+#include <cstdlib>
 #include <deque>
 #include <iostream>
 
@@ -48,14 +49,43 @@ struct test_scope : test_scope_stack<>
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+template <typename = void>
+struct test_report_info
+{
+    static unsigned checks;
+    static unsigned failures;
+};
+
+template <typename _>
+unsigned test_report_info<_>::checks = 0;
+template <typename _>
+unsigned test_report_info<_>::failures = 0;
+
 inline void test_check(bool c, test_context context)
 {
+    ++test_report_info<>::checks;
     if (!c)
     {
+        ++test_report_info<>::failures;
+
         std::cerr << context << " is false\n";
         for (auto const& scope : test_scope::stack)
             std::cerr << "    " << scope << '\n';
         std::cerr << '\n';
+    }
+}
+
+inline int test_report()
+{
+    unsigned const checks = test_report_info<>::checks;
+    unsigned const failures = test_report_info<>::failures;
+    if (failures)
+    {
+        std::cout << failures << " out of " << checks << " checks failed.\n";
+        return EXIT_FAILURE;
+    } else {
+        std::cout << "All " << checks << " checks succeeded.\n";
+        return EXIT_SUCCESS;
     }
 }
 
