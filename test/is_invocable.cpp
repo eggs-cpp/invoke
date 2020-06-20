@@ -7,15 +7,10 @@
 
 #include <eggs/invoke.hpp>
 
-#include <cassert>
 #include <type_traits>
 #include <utility>
 
-#if NDEBUG
-#define CHECK(...) (void)(__VA_ARGS__)
-#else
-#define CHECK(...) assert((__VA_ARGS__))
-#endif
+#include "test.hpp"
 
 // Account for P0012: "Make exception specifications be part of the type system".
 static constexpr bool p0012 = !std::is_same<void(), void() noexcept>::value;
@@ -81,7 +76,7 @@ std::integral_constant<bool, p0012> const p0012_nothrows{};
 
 template <typename R, typename F, typename... Args, bool IsNothrow,
     bool IsNothrowR = IsNothrow>
-void check_invocable(std::integral_constant<bool, IsNothrow>,
+void test_invocable(std::integral_constant<bool, IsNothrow>,
     std::integral_constant<bool, IsNothrowR> = {})
 {
     CHECK(std::is_base_of<std::true_type,
@@ -104,7 +99,7 @@ void check_invocable(std::integral_constant<bool, IsNothrow>,
 }
 
 template <typename F, typename... Args>
-void check_not_invocable()
+void test_not_invocable()
 {
     CHECK(std::is_base_of<std::false_type,
         eggs::is_invocable<F, Args...>>::value);
@@ -126,101 +121,101 @@ int main()
     /* mem-fun-ptr */ {
         using Fn = decltype(&C::fun);
 
-        check_invocable<int, Fn, C&, int>(p0012_nothrows);
-        check_not_invocable<Fn, C const&, int>();
-        check_invocable<int, Fn, C&&, int>(p0012_nothrows);
-        check_not_invocable<Fn, C const&&, int>();
+        CHECK_SCOPE(test_invocable<int, Fn, C&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fn, C const&, int>());
+        CHECK_SCOPE(test_invocable<int, Fn, C&&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fn, C const&&, int>());
 
-        check_invocable<int, Fn, D&, int>(p0012_nothrows);
-        check_not_invocable<Fn, D const&, int>();
-        check_invocable<int, Fn, D&&, int>(p0012_nothrows);
-        check_not_invocable<Fn, D const&&, int>();
+        CHECK_SCOPE(test_invocable<int, Fn, D&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fn, D const&, int>());
+        CHECK_SCOPE(test_invocable<int, Fn, D&&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fn, D const&&, int>());
 
-        check_invocable<int, Fn, std::reference_wrapper<C>, int>(p0012_nothrows);
-        check_not_invocable<Fn, std::reference_wrapper<C const>, int>();
+        CHECK_SCOPE(test_invocable<int, Fn, std::reference_wrapper<C>, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fn, std::reference_wrapper<C const>, int>());
 
-        check_invocable<int, Fn, C*, int>(p0012_nothrows);
-        check_not_invocable<Fn, C const*, int>();
+        CHECK_SCOPE(test_invocable<int, Fn, C*, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fn, C const*, int>());
 
-        check_invocable<int, Fn, smart_ptr<C>, int>(p0012_nothrows);
-        check_not_invocable<Fn, smart_ptr<C const>, int>();
+        CHECK_SCOPE(test_invocable<int, Fn, smart_ptr<C>, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fn, smart_ptr<C const>, int>());
 
-        check_invocable<int, Fn, smart_ptr_throws<C>, int>(throws);
-        check_not_invocable<Fn, smart_ptr_throws<C const>, int>();
+        CHECK_SCOPE(test_invocable<int, Fn, smart_ptr_throws<C>, int>(throws));
+        CHECK_SCOPE(test_not_invocable<Fn, smart_ptr_throws<C const>, int>());
 
-        check_not_invocable<Fn>();
-        check_not_invocable<Fn, int&>();
-        check_not_invocable<Fn, C&, C>();
+        CHECK_SCOPE(test_not_invocable<Fn>());
+        CHECK_SCOPE(test_not_invocable<Fn, int&>());
+        CHECK_SCOPE(test_not_invocable<Fn, C&, C>());
 
         using Fnc = decltype(&C::cfun);
 
-        check_invocable<int, Fnc, C&, int>(p0012_nothrows);
-        check_invocable<int, Fnc, C const&, int>(p0012_nothrows);
-        check_invocable<int, Fnc, C&&, int>(p0012_nothrows);
-        check_invocable<int, Fnc, C const&&, int>(p0012_nothrows);
+        CHECK_SCOPE(test_invocable<int, Fnc, C&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fnc, C const&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fnc, C&&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fnc, C const&&, int>(p0012_nothrows));
 
         using Fnl = decltype(&C::lfun);
 
-        check_invocable<int, Fnl, C&, int>(p0012_nothrows);
-        check_not_invocable<Fnl, C const&, int>();
-        check_not_invocable<Fnl, C&&, int>();
-        check_not_invocable<Fnl, C const&&, int>();
+        CHECK_SCOPE(test_invocable<int, Fnl, C&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fnl, C const&, int>());
+        CHECK_SCOPE(test_not_invocable<Fnl, C&&, int>());
+        CHECK_SCOPE(test_not_invocable<Fnl, C const&&, int>());
 
         using Fnr = decltype(&C::rfun);
 
-        check_not_invocable<Fnr, C&, int>();
-        check_not_invocable<Fnr, C const&, int>();
-        check_invocable<int, Fnr, C&&, int>(p0012_nothrows);
-        check_not_invocable<Fnr, C const&&, int>();
+        CHECK_SCOPE(test_not_invocable<Fnr, C&, int>());
+        CHECK_SCOPE(test_not_invocable<Fnr, C const&, int>());
+        CHECK_SCOPE(test_invocable<int, Fnr, C&&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fnr, C const&&, int>());
 
         using Fncl = decltype(&C::clfun);
 
-        check_invocable<int, Fncl, C&, int>(p0012_nothrows);
-        check_invocable<int, Fncl, C const&, int>(p0012_nothrows);
+        CHECK_SCOPE(test_invocable<int, Fncl, C&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fncl, C const&, int>(p0012_nothrows));
 #if __cplusplus > 201703L || defined(_MSC_VER)  // C++20: P0704
-        check_invocable<int, Fncl, C&&, int>(p0012_nothrows);
-        check_invocable<int, Fncl, C const&&, int>(p0012_nothrows);
+        CHECK_SCOPE(test_invocable<int, Fncl, C&&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fncl, C const&&, int>(p0012_nothrows));
 #else
-        check_not_invocable<Fncl, C&&, int>();
-        check_not_invocable<Fncl, C const&&, int>();
+        CHECK_SCOPE(test_not_invocable<Fncl, C&&, int>());
+        CHECK_SCOPE(test_not_invocable<Fncl, C const&&, int>());
 #endif
 
         using Fncr = decltype(&C::crfun);
 
-        check_not_invocable<Fncr, C&, int>();
-        check_not_invocable<Fncr, C const&, int>();
-        check_invocable<int, Fncr, C&&, int>(p0012_nothrows);
-        check_invocable<int, Fncr, C const&&, int>(p0012_nothrows);
+        CHECK_SCOPE(test_not_invocable<Fncr, C&, int>());
+        CHECK_SCOPE(test_not_invocable<Fncr, C const&, int>());
+        CHECK_SCOPE(test_invocable<int, Fncr, C&&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fncr, C const&&, int>(p0012_nothrows));
     }
 
     /* mem-obj-ptr */ {
         using Fn = int C::*;
 
-        check_invocable<int&, Fn, C&>(nothrows);
-        check_invocable<int const&, Fn, C const&>(nothrows);
-        check_invocable<int&&, Fn, C&&>(nothrows);
-        check_invocable<int const&&, Fn, C const&&>(nothrows);
+        CHECK_SCOPE(test_invocable<int&, Fn, C&>(nothrows));
+        CHECK_SCOPE(test_invocable<int const&, Fn, C const&>(nothrows));
+        CHECK_SCOPE(test_invocable<int&&, Fn, C&&>(nothrows));
+        CHECK_SCOPE(test_invocable<int const&&, Fn, C const&&>(nothrows));
 
-        check_invocable<int&, Fn, D&>(nothrows);
-        check_invocable<int const&, Fn, D const&>(nothrows);
-        check_invocable<int&&, Fn, D&&>(nothrows);
-        check_invocable<int const&&, Fn, D const&&>(nothrows);
+        CHECK_SCOPE(test_invocable<int&, Fn, D&>(nothrows));
+        CHECK_SCOPE(test_invocable<int const&, Fn, D const&>(nothrows));
+        CHECK_SCOPE(test_invocable<int&&, Fn, D&&>(nothrows));
+        CHECK_SCOPE(test_invocable<int const&&, Fn, D const&&>(nothrows));
 
-        check_invocable<int&, Fn, std::reference_wrapper<C>>(nothrows);
-        check_invocable<int const&, Fn, std::reference_wrapper<C const>>(nothrows);
+        CHECK_SCOPE(test_invocable<int&, Fn, std::reference_wrapper<C>>(nothrows));
+        CHECK_SCOPE(test_invocable<int const&, Fn, std::reference_wrapper<C const>>(nothrows));
 
-        check_invocable<int&, Fn, C*>(nothrows);
-        check_invocable<int const&, Fn, C const*>(nothrows);
+        CHECK_SCOPE(test_invocable<int&, Fn, C*>(nothrows));
+        CHECK_SCOPE(test_invocable<int const&, Fn, C const*>(nothrows));
 
-        check_invocable<int&, Fn, smart_ptr<C>>(nothrows);
-        check_invocable<int const&, Fn, smart_ptr<C const>>(nothrows);
+        CHECK_SCOPE(test_invocable<int&, Fn, smart_ptr<C>>(nothrows));
+        CHECK_SCOPE(test_invocable<int const&, Fn, smart_ptr<C const>>(nothrows));
 
-        check_invocable<int&, Fn, smart_ptr_throws<C>>(throws);
-        check_invocable<int const&, Fn, smart_ptr_throws<C const>>(throws);
+        CHECK_SCOPE(test_invocable<int&, Fn, smart_ptr_throws<C>>(throws));
+        CHECK_SCOPE(test_invocable<int const&, Fn, smart_ptr_throws<C const>>(throws));
 
-        check_not_invocable<Fn>();
-        check_not_invocable<Fn, int&>();
-        check_not_invocable<Fn, C&, int>();
+        CHECK_SCOPE(test_not_invocable<Fn>());
+        CHECK_SCOPE(test_not_invocable<Fn, int&>());
+        CHECK_SCOPE(test_not_invocable<Fn, C&, int>());
     }
 
     /* fun-obj */ {
@@ -232,16 +227,16 @@ int main()
             }
         };
 
-        check_invocable<int, Fn, int>(nothrows);
-        check_invocable<int, Fn, conv_to<int>>(nothrows);
-        check_invocable<int, Fn, conv_to_throws<int>>(throws);
-        check_invocable<conv_from<int>, Fn, int>(nothrows);
-        check_invocable<conv_from_throws<int>, Fn, int>(nothrows, throws);
-        check_invocable<conv_from_throws<int>, Fn, conv_to_throws<int>>(throws, throws);
+        CHECK_SCOPE(test_invocable<int, Fn, int>(nothrows));
+        CHECK_SCOPE(test_invocable<int, Fn, conv_to<int>>(nothrows));
+        CHECK_SCOPE(test_invocable<int, Fn, conv_to_throws<int>>(throws));
+        CHECK_SCOPE(test_invocable<conv_from<int>, Fn, int>(nothrows));
+        CHECK_SCOPE(test_invocable<conv_from_throws<int>, Fn, int>(nothrows, throws));
+        CHECK_SCOPE(test_invocable<conv_from_throws<int>, Fn, conv_to_throws<int>>(throws, throws));
 
-        check_not_invocable<Fn>();
-        check_not_invocable<Fn, void*>();
-        check_not_invocable<Fn, int, int>();
+        CHECK_SCOPE(test_not_invocable<Fn>());
+        CHECK_SCOPE(test_not_invocable<Fn, void*>());
+        CHECK_SCOPE(test_not_invocable<Fn, int, int>());
 
         struct S
         {
@@ -252,6 +247,6 @@ int main()
         };
         using Fn_ptr = decltype(&S::f);
 
-        check_invocable<int, Fn_ptr, int>(p0012_nothrows);
+        CHECK_SCOPE(test_invocable<int, Fn_ptr, int>(p0012_nothrows));
     }
 }

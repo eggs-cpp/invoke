@@ -7,15 +7,10 @@
 
 #include <eggs/invoke.hpp>
 
-#include <cassert>
 #include <type_traits>
 #include <utility>
 
-#if NDEBUG
-#define CHECK(...) (void)(__VA_ARGS__)
-#else
-#define CHECK(...) assert((__VA_ARGS__))
-#endif
+#include "test.hpp"
 
 template <typename T>
 struct no_result_void
