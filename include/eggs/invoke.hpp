@@ -181,11 +181,26 @@ namespace eggs
         };
     }    // namespace detail
 
+    //! template <class Fn, class... ArgTypes> struct invoke_result;
+    //!
+    //! - _Comments_: If the expression `INVOKE(std::declval<Fn>(),
+    //!   std::declval<ArgTypes>()...)` is well-formed when treated as an
+    //!   unevaluated operand, the member typedef `type` names the type
+    //!   `decltype(INVOKE(std::declval<Fn>(), std::declval<ArgTypes>()...))`;
+    //!   otherwise, there shall be no member `type`. Access checking is
+    //!   performed as if in a context unrelated to `Fn` and `ArgTypes`. Only
+    //!   the validity of the immediate context of the expression is considered.
+    //!
+    //! - _Preconditions_: `Fn` and all types in the template parameter pack
+    //!   `ArgTypes` are complete types, _cv_ `void`, or arrays of unknown
+    //!   bound.
     template <typename Fn, typename... ArgTypes>
     struct invoke_result
       : detail::invoke_result_impl<Fn&&(ArgTypes&&...)>
     {};
 
+    //! template <class Fn, class... ArgTypes>
+    //! using invoke_result_t = typename invoke_result<Fn, ArgTypes...>::type;
     template <typename Fn, typename... ArgTypes>
     using invoke_result_t =
         typename invoke_result<Fn, ArgTypes...>::type;
@@ -205,12 +220,24 @@ namespace eggs
         {};
     }
 
+    //! template <class Fn, class... ArgTypes> struct is_invocable;
+    //!
+    //! - _Condition_: The expression `INVOKE(std::declval<Fn>(),
+    //!   std::declval<ArgTypes>()...)` is well-formed when treated as an
+    //!   unevaluated operand.
+    //!
+    //! - _Comments_: `Fn` and all types in the template parameter pack
+    //!   `ArgTypes` shall be complete types, _cv_ `void`, or arrays of
+    //!   unknown bound.
     template <typename Fn, typename... ArgTypes>
     struct is_invocable
       : detail::is_invocable_impl<Fn&&(ArgTypes&&...)>::type
     {};
 
 #if __cpp_variable_templates
+    //! template <class Fn, class... ArgTypes> // (C++14)
+    //! inline constexpr bool is_invocable_v =
+    //!     eggs::is_invocable<Fn, ArgTypes...>::value;
     template <typename Fn, typename... ArgTypes>
 #if __cpp_inline_variables
     inline
@@ -234,12 +261,24 @@ namespace eggs
         {};
     }
 
+    //! template <class R, class Fn, class... ArgTypes> struct is_invocable_r;
+    //!
+    //! - _Condition_: The expression `INVOKE<R>(std::declval<Fn>(),
+    //!   std::declval<ArgTypes>()...)` is well-formed when treated as an
+    //!   unevaluated operand.
+    //!
+    //! - _Comments_: `Fn`, `R`, and all types in the template parameter pack
+    //!   `ArgTypes` shall be complete types, _cv_ `void`, or arrays of
+    //!   unknown bound.
     template <typename R, typename Fn, typename... ArgTypes>
     struct is_invocable_r
       : detail::is_invocable_r_impl<Fn&&(ArgTypes&&...), R>::type
     {};
 
 #if __cpp_variable_templates
+    //! template <class R, class Fn, class... ArgTypes> // (C++14)
+    //! inline constexpr bool is_invocable_r_v =
+    //!     eggs::is_invocable_r<R, Fn, ArgTypes...>::value;
     template <typename R, typename Fn, typename... ArgTypes>
 #if __cpp_inline_variables
     inline
@@ -264,12 +303,24 @@ namespace eggs
         {};
     }
 
+    //! template <class Fn, class... ArgTypes> struct is_nothrow_invocable;
+    //!
+    //! - _Condition_: `eggs::is_invocable_v<Fn, ArgTypes...>` is `true` and
+    //!   the expression `INVOKE(std::declval<Fn>(), std::declval<ArgTypes>()...)`
+    //!   is known not to throw any exceptions.
+    //!
+    //! - _Comments_: `Fn` and all types in the template parameter pack
+    //!   `ArgTypes` shall be complete types, _cv_ `void`, or arrays of
+    //!   unknown bound.
     template <typename Fn, typename... ArgTypes>
     struct is_nothrow_invocable
       : detail::is_nothrow_invocable_impl<Fn&&(ArgTypes&&...)>::type
     {};
 
 #if __cpp_variable_templates
+    //! template <class Fn, class... ArgTypes> // (C++14)
+    //! inline constexpr bool is_nothrow_invocable_v =
+    //!     eggs::is_nothrow_invocable<Fn, ArgTypes...>::value;
     template <typename Fn, typename... ArgTypes>
 #if __cpp_inline_variables
     inline
@@ -294,12 +345,24 @@ namespace eggs
         {};
     }
 
+    //! template <class R, class Fn, class... ArgTypes> struct is_nothrow_invocable_r;
+    //!
+    //! - _Condition_: `eggs::is_invocable_r_v<R, Fn, ArgTypes...>` is `true`
+    //!   and the expression `INVOKE(std::declval<Fn>(), std::declval<ArgTypes>()...)`
+    //!   is known not to throw any exceptions.
+    //!
+    //! - _Comments_: `Fn`, `R`, and all types in the template parameter pack
+    //!   `ArgTypes` shall be complete types, _cv_ `void`, or arrays of
+    //!   unknown bound.
     template <typename R, typename Fn, typename... ArgTypes>
     struct is_nothrow_invocable_r
       : detail::is_nothrow_invocable_r_impl<Fn&&(ArgTypes&&...), R>::type
     {};
 
 #if __cpp_variable_templates
+    //! template <class R, class Fn, class... ArgTypes> // (C++14)
+    //! inline constexpr bool is_nothrow_invocable_r_v =
+    //!     eggs::is_nothrow_invocable_r<R, Fn, ArgTypes...>::value;
     template <typename R, typename Fn, typename... ArgTypes>
 #if __cpp_inline_variables
     inline
@@ -309,6 +372,14 @@ namespace eggs
 #endif
 
     ///////////////////////////////////////////////////////////////////////////
+    //! template <class F, class... Args>
+    //! constexpr eggs::invoke_result_t<F, Args...> invoke(F&& f, Args&&... args)
+    //!     noexcept(eggs::is_nothrow_invocable_v<F, Args...>);
+    //!
+    //! - _Returns_: `INVOKE(std::forward<F>(f), std::forward<Args>(args)...)`.
+    //!
+    //! - _Remarks_: This function shall not participate in overload resolution
+    //!   unless `eggs::is_invocable_v<F, Args...>` is `true`.
     template <typename Fn, typename... ArgTypes>
     constexpr invoke_result_t<Fn, ArgTypes...>
     invoke(Fn&& f, ArgTypes&&... args)
@@ -318,6 +389,15 @@ namespace eggs
             std::forward<Fn>(f), std::forward<ArgTypes>(args)...);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    //! template <class R, class F, class... Args> // (extension)
+    //! constexpr R eggs::invoke_r(F&& f, Args&&... args)
+    //!     noexcept(eggs::is_nothrow_invocable_r_v<R, F, Args...>);
+    //!
+    //! - _Returns_: `INVOKE<R>(std::forward<F>(f), std::forward<Args>(args)...)`.
+    //!
+    //! - _Remarks_: This function shall not participate in overload resolution
+    //!   unless `eggs::is_invocable_r_v<R, F, Args...>` is `true`.
     template <typename R, typename Fn, typename... ArgTypes, typename Enable =
         typename std::enable_if<is_invocable_r<R, Fn, ArgTypes...>::value>::type>
     constexpr R
