@@ -322,7 +322,7 @@ namespace eggs
         typename Enable = invoke_result_t<Fn, ArgTypes...>>
     constexpr R
     invoke_r(Fn&& f, ArgTypes&&... args)
-        noexcept(is_nothrow_invocable<Fn, ArgTypes...>::value)
+        noexcept(is_nothrow_invocable_r<R, Fn, ArgTypes...>::value)
     {
         return EGGS_INVOKE_R(
             R, std::forward<Fn>(f), std::forward<ArgTypes>(args)...);

@@ -105,18 +105,25 @@ void test_invoke_obj(
     CHECK(noexcept(eggs::invoke_r<void>(std::forward<F>(f), std::forward<A1>(a1))) == IsNothrow);
 }
 
-template <typename R, bool IsNothrow, typename F, typename... Args>
-void test_invoke_fun(
-    R&& r, std::integral_constant<bool, IsNothrow>, F&& f, Args&&... args)
+template <typename R, bool IsNothrow, bool IsNothrowR, typename F, typename... Args>
+void test_invoke_r_fun(
+    R&& r, std::integral_constant<bool, IsNothrow>, std::integral_constant<bool, IsNothrowR>, F&& f, Args&&... args)
 {
-    CHECK(eggs::invoke(std::forward<F>(f), std::forward<Args>(args)...) == r);
     CHECK(eggs::invoke_r<R>(std::forward<F>(f), std::forward<Args>(args)...) == r);
-    CHECK(std::is_same<decltype(eggs::invoke(std::forward<F>(f), std::forward<Args>(args)...)), R>::value);
     CHECK(std::is_same<decltype(eggs::invoke_r<R>(std::forward<F>(f), std::forward<Args>(args)...)), R>::value);
     CHECK(std::is_same<decltype(eggs::invoke_r<void>(std::forward<F>(f), std::forward<Args>(args)...)), void>::value);
-    CHECK(noexcept(eggs::invoke(std::forward<F>(f), std::forward<Args>(args)...)) == IsNothrow);
-    CHECK(noexcept(eggs::invoke_r<R>(std::forward<F>(f), std::forward<Args>(args)...)) == IsNothrow);
+    CHECK(noexcept(eggs::invoke_r<R>(std::forward<F>(f), std::forward<Args>(args)...)) == IsNothrowR);
     CHECK(noexcept(eggs::invoke_r<void>(std::forward<F>(f), std::forward<Args>(args)...)) == IsNothrow);
+}
+
+template <typename R, bool IsNothrow, typename F, typename... Args>
+void test_invoke_fun(
+    R&& r, std::integral_constant<bool, IsNothrow> is_nothrow, F&& f, Args&&... args)
+{
+    CHECK(eggs::invoke(std::forward<F>(f), std::forward<Args>(args)...) == r);
+    CHECK(std::is_same<decltype(eggs::invoke(std::forward<F>(f), std::forward<Args>(args)...)), R>::value);
+    CHECK(noexcept(eggs::invoke(std::forward<F>(f), std::forward<Args>(args)...)) == IsNothrow);
+    test_invoke_r_fun<R>(std::forward<R>(r), is_nothrow, is_nothrow, std::forward<F>(f), std::forward<Args>(args)...);
 }
 
 void test_mem_obj_ptr()
@@ -283,6 +290,8 @@ void test_fun_obj()
         CHECK_SCOPE(test_invoke_fun(f(40), nothrows, f, 40));
         CHECK_SCOPE(test_invoke_fun(f(conv_to<int>(40)), nothrows, f, conv_to<int>(40)));
         CHECK_SCOPE(test_invoke_fun(f(conv_to_throws<int>(40)), throws, f, conv_to_throws<int>(40)));
+        CHECK_SCOPE(test_invoke_r_fun<conv_to_throws<int>>(f(40), nothrows, throws, f, 40));
+        CHECK_SCOPE(test_invoke_r_fun<conv_to_throws<int>>(f(40), throws, throws, f, conv_to_throws<int>(40)));
     }
 
     /* fun-ptr */ {
