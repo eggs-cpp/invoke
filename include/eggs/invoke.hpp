@@ -318,8 +318,8 @@ namespace eggs
             std::forward<Fn>(f), std::forward<ArgTypes>(args)...);
     }
 
-    template <typename R, typename Fn, typename... ArgTypes,
-        typename Enable = invoke_result_t<Fn, ArgTypes...>>
+    template <typename R, typename Fn, typename... ArgTypes, typename Enable =
+        typename std::enable_if<is_invocable_r<R, Fn, ArgTypes...>::value>::type>
     constexpr R
     invoke_r(Fn&& f, ArgTypes&&... args)
         noexcept(is_nothrow_invocable_r<R, Fn, ArgTypes...>::value)

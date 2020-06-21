@@ -93,7 +93,8 @@ T const* addressof(T const& ref)
 
 template <typename R, bool IsNothrow, typename F, typename A1>
 void test_invoke_obj(
-    R&& r, std::integral_constant<bool, IsNothrow>, F&& f, A1&& a1)
+    R&& r, std::integral_constant<bool, IsNothrow>,
+    F&& f, A1&& a1)
 {
     CHECK(::addressof(eggs::invoke(std::forward<F>(f), std::forward<A1>(a1))) == ::addressof(r));
     CHECK(::addressof(eggs::invoke_r<R&&>(std::forward<F>(f), std::forward<A1>(a1))) == ::addressof(r));
@@ -107,7 +108,8 @@ void test_invoke_obj(
 
 template <typename R, bool IsNothrow, bool IsNothrowR, typename F, typename... Args>
 void test_invoke_r_fun(
-    R&& r, std::integral_constant<bool, IsNothrow>, std::integral_constant<bool, IsNothrowR>, F&& f, Args&&... args)
+    R&& r, std::integral_constant<bool, IsNothrow>, std::integral_constant<bool, IsNothrowR>,
+    F&& f, Args&&... args)
 {
     CHECK(eggs::invoke_r<R>(std::forward<F>(f), std::forward<Args>(args)...) == r);
     CHECK(std::is_same<decltype(eggs::invoke_r<R>(std::forward<F>(f), std::forward<Args>(args)...)), R>::value);
@@ -118,7 +120,8 @@ void test_invoke_r_fun(
 
 template <typename R, bool IsNothrow, typename F, typename... Args>
 void test_invoke_fun(
-    R&& r, std::integral_constant<bool, IsNothrow> is_nothrow, F&& f, Args&&... args)
+    R&& r, std::integral_constant<bool, IsNothrow> is_nothrow,
+    F&& f, Args&&... args)
 {
     CHECK(eggs::invoke(std::forward<F>(f), std::forward<Args>(args)...) == r);
     CHECK(std::is_same<decltype(eggs::invoke(std::forward<F>(f), std::forward<Args>(args)...)), R>::value);
@@ -126,28 +129,63 @@ void test_invoke_fun(
     test_invoke_r_fun<R>(std::forward<R>(r), is_nothrow, is_nothrow, std::forward<F>(f), std::forward<Args>(args)...);
 }
 
+template <typename R, typename T, typename Enable = void>
+struct not_invocable_r
+  : std::true_type
+{};
+
+template <typename R, typename F, typename... Args>
+struct not_invocable_r<R, F(Args...), decltype((void)
+    eggs::invoke_r<R>(std::declval<F>(), std::declval<Args>()...))>
+  : std::false_type
+{};
+
+template <typename R, typename F, typename... Args>
+void test_not_invocable_r(F&& /*f*/, Args&&... /*args*/)
+{
+    CHECK(not_invocable_r<R, F&&(Args&&...)>::value);
+}
+
+template <typename T, typename Enable = void>
+struct not_invocable
+  : std::true_type
+{};
+
+template <typename F, typename... Args>
+struct not_invocable<F(Args...), decltype((void)
+    eggs::invoke(std::declval<F>(), std::declval<Args>()...))>
+  : std::false_type
+{};
+
+template <typename F, typename... Args>
+void test_not_invocable(F&& f, Args&&... args)
+{
+    CHECK(not_invocable<F&&(Args&&...)>::value);
+    test_not_invocable_r<void>(std::forward<F>(f), std::forward<Args>(args)...);
+}
+
 void test_mem_obj_ptr()
 {
-    auto f = &C::obj;
+    auto obj = &C::obj;
 
     /* reference */ {
         C x = {42};
         C& r = x;
         C const& cr = x;
 
-        CHECK_SCOPE(test_invoke_obj(r.obj, nothrows, f, r));
-        CHECK_SCOPE(test_invoke_obj(cr.obj, nothrows, f, cr));
-        CHECK_SCOPE(test_invoke_obj(std::move(r.obj), nothrows, f, std::move(r)));
-        CHECK_SCOPE(test_invoke_obj(std::move(cr.obj), nothrows, f, std::move(cr)));
+        CHECK_SCOPE(test_invoke_obj(r.obj, nothrows, obj, r));
+        CHECK_SCOPE(test_invoke_obj(cr.obj, nothrows, obj, cr));
+        CHECK_SCOPE(test_invoke_obj(std::move(r.obj), nothrows, obj, std::move(r)));
+        CHECK_SCOPE(test_invoke_obj(std::move(cr.obj), nothrows, obj, std::move(cr)));
 
         D d = {42};
         D& rd = d;
         D const& crd = d;
 
-        CHECK_SCOPE(test_invoke_obj(rd.obj, nothrows, f, rd));
-        CHECK_SCOPE(test_invoke_obj(crd.obj, nothrows, f, crd));
-        CHECK_SCOPE(test_invoke_obj(std::move(rd.obj), nothrows, f, std::move(rd)));
-        CHECK_SCOPE(test_invoke_obj(std::move(crd.obj), nothrows, f, std::move(crd)));
+        CHECK_SCOPE(test_invoke_obj(rd.obj, nothrows, obj, rd));
+        CHECK_SCOPE(test_invoke_obj(crd.obj, nothrows, obj, crd));
+        CHECK_SCOPE(test_invoke_obj(std::move(rd.obj), nothrows, obj, std::move(rd)));
+        CHECK_SCOPE(test_invoke_obj(std::move(crd.obj), nothrows, obj, std::move(crd)));
     }
 
     /* reference wrapper */ {
@@ -155,8 +193,8 @@ void test_mem_obj_ptr()
         std::reference_wrapper<C> r = x;
         std::reference_wrapper<C const> cr = x;
 
-        CHECK_SCOPE(test_invoke_obj(r.get().obj, nothrows, f, r));
-        CHECK_SCOPE(test_invoke_obj(cr.get().obj, nothrows, f, cr));
+        CHECK_SCOPE(test_invoke_obj(r.get().obj, nothrows, obj, r));
+        CHECK_SCOPE(test_invoke_obj(cr.get().obj, nothrows, obj, cr));
     }
 
     /* pointer */ {
@@ -164,8 +202,8 @@ void test_mem_obj_ptr()
         C* p = &x;
         C const* cp = &x;
 
-        CHECK_SCOPE(test_invoke_obj((*p).obj, nothrows, f, p));
-        CHECK_SCOPE(test_invoke_obj((*cp).obj, nothrows, f, cp));
+        CHECK_SCOPE(test_invoke_obj((*p).obj, nothrows, obj, p));
+        CHECK_SCOPE(test_invoke_obj((*cp).obj, nothrows, obj, cp));
     }
 
     /* smart pointer */ {
@@ -173,52 +211,74 @@ void test_mem_obj_ptr()
         smart_ptr<C> p = &x;
         smart_ptr<C const> cp = &x;
 
-        CHECK_SCOPE(test_invoke_obj((*p).obj, nothrows, f, p));
-        CHECK_SCOPE(test_invoke_obj((*cp).obj, nothrows, f, cp));
+        CHECK_SCOPE(test_invoke_obj((*p).obj, nothrows, obj, p));
+        CHECK_SCOPE(test_invoke_obj((*cp).obj, nothrows, obj, cp));
 
         smart_ptr_throws<C> tp = &x;
         smart_ptr_throws<C const> tcp = &x;
 
-        CHECK_SCOPE(test_invoke_obj((*tp).obj, throws, f, tp));
-        CHECK_SCOPE(test_invoke_obj((*tcp).obj, throws, f, tcp));
+        CHECK_SCOPE(test_invoke_obj((*tp).obj, throws, obj, tp));
+        CHECK_SCOPE(test_invoke_obj((*tcp).obj, throws, obj, tcp));
+    }
+
+    /* sfinae */ {
+        C x = {42};
+
+        CHECK_SCOPE(test_not_invocable(obj));
+        CHECK_SCOPE(test_not_invocable(obj, 40));
+        CHECK_SCOPE(test_not_invocable(obj, x, 40));
     }
 }
 
 void test_mem_fun_ptr()
 {
-    auto f = &C::fun;
-    auto cf = &C::cfun;
-    auto lf = &C::lfun;
-    auto rf = &C::rfun;
-    auto clf = &C::clfun;
-    auto crf = &C::crfun;
+    auto fun = &C::fun;
+    auto cfun = &C::cfun;
+    auto lfun = &C::lfun;
+    auto rfun = &C::rfun;
+    auto clfun = &C::clfun;
+    auto crfun = &C::crfun;
 
     /* reference */ {
         C x = {42};
         C& r = x;
         C const& cr = x;
 
-        CHECK_SCOPE(test_invoke_fun(r.fun(40), p0012_nothrows, f, r, 40));
-        CHECK_SCOPE(test_invoke_fun(r.cfun(40), p0012_nothrows, cf, r, 40));
-        CHECK_SCOPE(test_invoke_fun(r.lfun(40), p0012_nothrows, lf, r, 40));
-        CHECK_SCOPE(test_invoke_fun(r.clfun(40), p0012_nothrows, clf, r, 40));
+        CHECK_SCOPE(test_invoke_fun(r.fun(40), p0012_nothrows, fun, r, 40));
+        CHECK_SCOPE(test_invoke_fun(r.cfun(40), p0012_nothrows, cfun, r, 40));
+        CHECK_SCOPE(test_invoke_fun(r.lfun(40), p0012_nothrows, lfun, r, 40));
+        CHECK_SCOPE(test_not_invocable(rfun, r, 40));
+        CHECK_SCOPE(test_invoke_fun(r.clfun(40), p0012_nothrows, clfun, r, 40));
+        CHECK_SCOPE(test_not_invocable(crfun, r, 40));
 
-        CHECK_SCOPE(test_invoke_fun(cr.cfun(40), p0012_nothrows, cf, cr, 40));
-        CHECK_SCOPE(test_invoke_fun(cr.clfun(40), p0012_nothrows, clf, cr, 40));
+        CHECK_SCOPE(test_not_invocable(fun, cr, 40));
+        CHECK_SCOPE(test_invoke_fun(cr.cfun(40), p0012_nothrows, cfun, cr, 40));
+        CHECK_SCOPE(test_not_invocable(lfun, cr, 40));
+        CHECK_SCOPE(test_not_invocable(rfun, cr, 40));
+        CHECK_SCOPE(test_invoke_fun(cr.clfun(40), p0012_nothrows, clfun, cr, 40));
+        CHECK_SCOPE(test_not_invocable(crfun, cr, 40));
 
-        CHECK_SCOPE(test_invoke_fun(std::move(r).fun(40), p0012_nothrows, f, std::move(r), 40));
-        CHECK_SCOPE(test_invoke_fun(std::move(r).cfun(40), p0012_nothrows, cf, std::move(r), 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(r).fun(40), p0012_nothrows, fun, std::move(r), 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(r).cfun(40), p0012_nothrows, cfun, std::move(r), 40));
+        CHECK_SCOPE(test_not_invocable(lfun, std::move(r), 40));
 #if __cplusplus > 201703L || defined(_MSC_VER) // C++20: P0704
-        CHECK_SCOPE(test_invoke_fun(std::move(r).clfun(40), p0012_nothrows, clf, std::move(r), 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(r).clfun(40), p0012_nothrows, clfun, std::move(r), 40));
+#else
+        CHECK_SCOPE(test_not_invocable(clfun, std::move(r), 40));
 #endif
-        CHECK_SCOPE(test_invoke_fun(std::move(r).rfun(40), p0012_nothrows, rf, std::move(r), 40));
-        CHECK_SCOPE(test_invoke_fun(std::move(r).crfun(40), p0012_nothrows, crf, std::move(r), 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(r).rfun(40), p0012_nothrows, rfun, std::move(r), 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(r).crfun(40), p0012_nothrows, crfun, std::move(r), 40));
 
-        CHECK_SCOPE(test_invoke_fun(std::move(cr).cfun(40), p0012_nothrows, cf, std::move(cr), 40));
+        CHECK_SCOPE(test_not_invocable(fun, std::move(cr), 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(cr).cfun(40), p0012_nothrows, cfun, std::move(cr), 40));
+        CHECK_SCOPE(test_not_invocable(lfun, std::move(cr), 40));
+        CHECK_SCOPE(test_not_invocable(rfun, std::move(cr), 40));
 #if __cplusplus > 201703L || defined(_MSC_VER)  // C++20: P0704
-        CHECK_SCOPE(test_invoke_fun(std::move(cr).clfun(40), p0012_nothrows, clf, std::move(cr), 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(cr).clfun(40), p0012_nothrows, clfun, std::move(cr), 40));
+#else
+        CHECK_SCOPE(test_not_invocable(clfun, std::move(cr), 40));
 #endif
-        CHECK_SCOPE(test_invoke_fun(std::move(cr).crfun(40), p0012_nothrows, crf, std::move(cr), 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(cr).crfun(40), p0012_nothrows, crfun, std::move(cr), 40));
     }
 
     /* reference wrapper */ {
@@ -226,13 +286,19 @@ void test_mem_fun_ptr()
         std::reference_wrapper<C> r = x;
         std::reference_wrapper<C const> cr = x;
 
-        CHECK_SCOPE(test_invoke_fun(r.get().fun(40), p0012_nothrows, f, r, 40));
-        CHECK_SCOPE(test_invoke_fun(r.get().cfun(40), p0012_nothrows, cf, r, 40));
-        CHECK_SCOPE(test_invoke_fun(r.get().lfun(40), p0012_nothrows, lf, r, 40));
-        CHECK_SCOPE(test_invoke_fun(r.get().clfun(40), p0012_nothrows, clf, r, 40));
+        CHECK_SCOPE(test_invoke_fun(r.get().fun(40), p0012_nothrows, fun, r, 40));
+        CHECK_SCOPE(test_invoke_fun(r.get().cfun(40), p0012_nothrows, cfun, r, 40));
+        CHECK_SCOPE(test_invoke_fun(r.get().lfun(40), p0012_nothrows, lfun, r, 40));
+        CHECK_SCOPE(test_not_invocable(rfun, r, 40));
+        CHECK_SCOPE(test_invoke_fun(r.get().clfun(40), p0012_nothrows, clfun, r, 40));
+        CHECK_SCOPE(test_not_invocable(crfun, r, 40));
 
-        CHECK_SCOPE(test_invoke_fun(cr.get().cfun(40), p0012_nothrows, cf, cr, 40));
-        CHECK_SCOPE(test_invoke_fun(cr.get().clfun(40), p0012_nothrows, clf, cr, 40));
+        CHECK_SCOPE(test_not_invocable(fun, cr, 40));
+        CHECK_SCOPE(test_invoke_fun(cr.get().cfun(40), p0012_nothrows, cfun, cr, 40));
+        CHECK_SCOPE(test_not_invocable(lfun, cr, 40));
+        CHECK_SCOPE(test_not_invocable(rfun, cr, 40));
+        CHECK_SCOPE(test_invoke_fun(cr.get().clfun(40), p0012_nothrows, clfun, cr, 40));
+        CHECK_SCOPE(test_not_invocable(crfun, cr, 40));
     }
 
     /* pointer */ {
@@ -240,13 +306,19 @@ void test_mem_fun_ptr()
         C* p = &x;
         C const* cp = &x;
 
-        CHECK_SCOPE(test_invoke_fun((*p).fun(40), p0012_nothrows, f, p, 40));
-        CHECK_SCOPE(test_invoke_fun((*p).cfun(40), p0012_nothrows, cf, p, 40));
-        CHECK_SCOPE(test_invoke_fun((*p).lfun(40), p0012_nothrows, lf, p, 40));
-        CHECK_SCOPE(test_invoke_fun((*p).clfun(40), p0012_nothrows, clf, p, 40));
+        CHECK_SCOPE(test_invoke_fun((*p).fun(40), p0012_nothrows, fun, p, 40));
+        CHECK_SCOPE(test_invoke_fun((*p).cfun(40), p0012_nothrows, cfun, p, 40));
+        CHECK_SCOPE(test_invoke_fun((*p).lfun(40), p0012_nothrows, lfun, p, 40));
+        CHECK_SCOPE(test_not_invocable(rfun, p, 40));
+        CHECK_SCOPE(test_invoke_fun((*p).clfun(40), p0012_nothrows, clfun, p, 40));
+        CHECK_SCOPE(test_not_invocable(crfun, p, 40));
 
-        CHECK_SCOPE(test_invoke_fun((*cp).cfun(40), p0012_nothrows, cf, cp, 40));
-        CHECK_SCOPE(test_invoke_fun((*cp).clfun(40), p0012_nothrows, clf, cp, 40));
+        CHECK_SCOPE(test_not_invocable(fun, cp, 40));
+        CHECK_SCOPE(test_invoke_fun((*cp).cfun(40), p0012_nothrows, cfun, cp, 40));
+        CHECK_SCOPE(test_not_invocable(lfun, cp, 40));
+        CHECK_SCOPE(test_not_invocable(rfun, cp, 40));
+        CHECK_SCOPE(test_invoke_fun((*cp).clfun(40), p0012_nothrows, clfun, cp, 40));
+        CHECK_SCOPE(test_not_invocable(crfun, cp, 40));
     }
 
     /* smart pointer */ {
@@ -254,24 +326,61 @@ void test_mem_fun_ptr()
         smart_ptr<C> p = &x;
         smart_ptr<C const> cp = &x;
 
-        CHECK_SCOPE(test_invoke_fun((*p).fun(40), p0012_nothrows, f, p, 40));
-        CHECK_SCOPE(test_invoke_fun((*p).cfun(40), p0012_nothrows, cf, p, 40));
-        CHECK_SCOPE(test_invoke_fun((*p).lfun(40), p0012_nothrows, lf, p, 40));
-        CHECK_SCOPE(test_invoke_fun((*p).clfun(40), p0012_nothrows, clf, p, 40));
+        CHECK_SCOPE(test_invoke_fun((*p).fun(40), p0012_nothrows, fun, p, 40));
+        CHECK_SCOPE(test_invoke_fun((*p).cfun(40), p0012_nothrows, cfun, p, 40));
+        CHECK_SCOPE(test_invoke_fun((*p).lfun(40), p0012_nothrows, lfun, p, 40));
+        CHECK_SCOPE(test_not_invocable(rfun, p, 40));
+        CHECK_SCOPE(test_invoke_fun((*p).clfun(40), p0012_nothrows, clfun, p, 40));
+        CHECK_SCOPE(test_not_invocable(crfun, p, 40));
 
-        CHECK_SCOPE(test_invoke_fun((*cp).cfun(40), p0012_nothrows, cf, cp, 40));
-        CHECK_SCOPE(test_invoke_fun((*cp).clfun(40), p0012_nothrows, clf, cp, 40));
+        CHECK_SCOPE(test_not_invocable(fun, cp, 40));
+        CHECK_SCOPE(test_invoke_fun((*cp).cfun(40), p0012_nothrows, cfun, cp, 40));
+        CHECK_SCOPE(test_not_invocable(lfun, cp, 40));
+        CHECK_SCOPE(test_not_invocable(rfun, cp, 40));
+        CHECK_SCOPE(test_invoke_fun((*cp).clfun(40), p0012_nothrows, clfun, cp, 40));
+        CHECK_SCOPE(test_not_invocable(crfun, cp, 40));
 
         smart_ptr_throws<C> tp = &x;
         smart_ptr_throws<C const> tcp = &x;
 
-        CHECK_SCOPE(test_invoke_fun((*tp).fun(40), throws, f, tp, 40));
-        CHECK_SCOPE(test_invoke_fun((*tp).cfun(40), throws, cf, tp, 40));
-        CHECK_SCOPE(test_invoke_fun((*tp).lfun(40), throws, lf, tp, 40));
-        CHECK_SCOPE(test_invoke_fun((*tp).clfun(40), throws, clf, tp, 40));
+        CHECK_SCOPE(test_invoke_fun((*tp).fun(40), throws, fun, tp, 40));
+        CHECK_SCOPE(test_invoke_fun((*tp).cfun(40), throws, cfun, tp, 40));
+        CHECK_SCOPE(test_invoke_fun((*tp).lfun(40), throws, lfun, tp, 40));
+        CHECK_SCOPE(test_not_invocable(rfun, tp, 40));
+        CHECK_SCOPE(test_invoke_fun((*tp).clfun(40), throws, clfun, tp, 40));
+        CHECK_SCOPE(test_not_invocable(crfun, tp, 40));
 
-        CHECK_SCOPE(test_invoke_fun((*tcp).cfun(40), throws, cf, tcp, 40));
-        CHECK_SCOPE(test_invoke_fun((*tcp).clfun(40), throws, clf, tcp, 40));
+        CHECK_SCOPE(test_not_invocable(fun, tcp, 40));
+        CHECK_SCOPE(test_invoke_fun((*tcp).cfun(40), throws, cfun, tcp, 40));
+        CHECK_SCOPE(test_not_invocable(lfun, tcp, 40));
+        CHECK_SCOPE(test_not_invocable(rfun, tcp, 40));
+        CHECK_SCOPE(test_invoke_fun((*tcp).clfun(40), throws, clfun, tcp, 40));
+        CHECK_SCOPE(test_not_invocable(crfun, tcp, 40));
+    }
+
+    /* sfinae */ {
+        C x = {42};
+
+        CHECK_SCOPE(test_not_invocable(fun));
+        CHECK_SCOPE(test_not_invocable(cfun));
+        CHECK_SCOPE(test_not_invocable(lfun));
+        CHECK_SCOPE(test_not_invocable(rfun));
+        CHECK_SCOPE(test_not_invocable(clfun));
+        CHECK_SCOPE(test_not_invocable(crfun));
+
+        CHECK_SCOPE(test_not_invocable(fun, 40));
+        CHECK_SCOPE(test_not_invocable(cfun, 40));
+        CHECK_SCOPE(test_not_invocable(lfun, 40));
+        CHECK_SCOPE(test_not_invocable(rfun, 40));
+        CHECK_SCOPE(test_not_invocable(clfun, 40));
+        CHECK_SCOPE(test_not_invocable(crfun, 40));
+
+        CHECK_SCOPE(test_not_invocable(fun, x, 40, 41));
+        CHECK_SCOPE(test_not_invocable(cfun, x, 40, 41));
+        CHECK_SCOPE(test_not_invocable(lfun, x, 40, 41));
+        CHECK_SCOPE(test_not_invocable(rfun, x, 40, 41));
+        CHECK_SCOPE(test_not_invocable(clfun, x, 40, 41));
+        CHECK_SCOPE(test_not_invocable(crfun, x, 40, 41));
     }
 }
 
@@ -292,6 +401,10 @@ void test_fun_obj()
         CHECK_SCOPE(test_invoke_fun(f(conv_to_throws<int>(40)), throws, f, conv_to_throws<int>(40)));
         CHECK_SCOPE(test_invoke_r_fun<conv_to_throws<int>>(f(40), nothrows, throws, f, 40));
         CHECK_SCOPE(test_invoke_r_fun<conv_to_throws<int>>(f(40), throws, throws, f, conv_to_throws<int>(40)));
+
+        CHECK_SCOPE(test_not_invocable(f));
+        CHECK_SCOPE(test_not_invocable(f, 40, 41));
+        CHECK_SCOPE(test_not_invocable_r<int*>(f, 40));
     }
 
     /* fun-ptr */ {
@@ -305,6 +418,9 @@ void test_fun_obj()
         auto f = &S::f;
 
         CHECK_SCOPE(test_invoke_fun(f(40), p0012_nothrows, f, 40));
+
+        CHECK_SCOPE(test_not_invocable(f));
+        CHECK_SCOPE(test_not_invocable(f, 40, 41));
     }
 }
 
