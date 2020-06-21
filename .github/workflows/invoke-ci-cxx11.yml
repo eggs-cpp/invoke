@@ -10,8 +10,8 @@ on:
     branches:
     paths:
       - 'CMakeLists.txt'
-      - 'include/*'
-      - 'test/*'
+      - 'include/**'
+      - 'test/**'
       - '.github/workflows/invoke-ci-cxx11.yml'
   pull_request:
 
