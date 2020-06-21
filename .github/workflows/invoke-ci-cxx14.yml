@@ -8,7 +8,6 @@ name: Eggs.Invoke C++14
 on:
   push:
     branches:
-      - master
     paths:
       - 'CMakeLists.txt'
       - 'include/*'
