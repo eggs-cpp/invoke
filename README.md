@@ -3,8 +3,8 @@
 
 ## Introduction ##
 
-**Eggs.Invoke** is a **C++11/14/17** single-header implementation of `INVOKE`
-and its related facilities.
+**Eggs.Invoke** is a **C++11/14/17/20** single-header implementation of
+`INVOKE` and its related facilities.
 
 ## Reference ##
 
@@ -168,6 +168,7 @@ inline constexpr bool is_nothrow_invocable_r_v =
 - C++11: ![](https://github.com/eggs-cpp/invoke/workflows/Eggs.Invoke%20C++11/badge.svg?branch=master)
 - C++14: ![](https://github.com/eggs-cpp/invoke/workflows/Eggs.Invoke%20C++14/badge.svg?branch=master)
 - C++17: ![](https://github.com/eggs-cpp/invoke/workflows/Eggs.Invoke%20C++17/badge.svg?branch=master)
+- C++20: ![](https://github.com/eggs-cpp/invoke/workflows/Eggs.Invoke%20C++20/badge.svg?branch=master)
 
 ---
 
