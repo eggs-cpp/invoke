@@ -90,8 +90,16 @@ inline int test_report()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+#define PP_CONCAT_I(A, B) A##B
+#define PP_CONCAT(A, B) PP_CONCAT_I(A, B)
+#define PP_UNIQUE(PREFIX) PP_CONCAT(PREFIX##_, __LINE__)
+
 #define CHECK(...)                                                             \
     (::test_check((__VA_ARGS__), {__FILE__, __LINE__, #__VA_ARGS__}))
+
+#define CHECK_CONSTEXPR(...)                                                   \
+    constexpr decltype((__VA_ARGS__)) PP_UNIQUE(constexpr) = (__VA_ARGS__);    \
+    CHECK(PP_UNIQUE(constexpr) == (__VA_ARGS__))
 
 #define CHECK_SCOPE(...)                                                       \
     (::test_scope{{__FILE__, __LINE__, #__VA_ARGS__}}, (__VA_ARGS__))

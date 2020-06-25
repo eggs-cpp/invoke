@@ -221,7 +221,7 @@ int main()
     /* fun-obj */ {
         struct Fn
         {
-            int operator()(int) noexcept
+            int operator()(int) const noexcept
             {
                 return 42;
             }
