@@ -172,13 +172,8 @@ int main()
 
         CHECK_SCOPE(test_invocable<int, Fncl, C&, int>(p0012_nothrows));
         CHECK_SCOPE(test_invocable<int, Fncl, C const&, int>(p0012_nothrows));
-#if __cplusplus > 201703L || defined(_MSC_VER)  // C++20: P0704
         CHECK_SCOPE(test_invocable<int, Fncl, C&&, int>(p0012_nothrows));
         CHECK_SCOPE(test_invocable<int, Fncl, C const&&, int>(p0012_nothrows));
-#else
-        CHECK_SCOPE(test_not_invocable<Fncl, C&&, int>());
-        CHECK_SCOPE(test_not_invocable<Fncl, C const&&, int>());
-#endif
 
         using Fncr = decltype(&C::crfun);
 

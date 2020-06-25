@@ -59,6 +59,51 @@ namespace eggs { namespace detail
         return *static_cast<T&&>(v);
     }
 
+    ////////////////////////////////////////////////////////////////////////////////
+#if __cplusplus > 201703L || defined(_MSC_VER)  // C++20: P0704
+    template <typename F, typename T1>
+    using p0704 = T1;
+#else
+    template <typename F, typename T1>
+    struct p0704_noexcept
+    {
+        using type = T1;
+    };
+    template <typename F, typename T1>
+    struct p0704_
+    {
+        using type = typename p0704_noexcept<F, T1>::type;
+    };
+
+    // P0704: Fixing const-qualified pointers to members
+    // In a .* expression whose object expression is an rvalue, the program is
+    // ill-formed if the second operand is a pointer to member function with whose
+    // ref-qualifier is &, unless its cv-qualifier-seq is const.
+    template <typename R, typename... Args, typename T1>
+    struct p0704_noexcept<R(Args...) const& noexcept, T1>
+    {
+        using type = T1&;
+    };
+    template <typename R, typename... Args, typename T1>
+    struct p0704_noexcept<R(Args..., ...) const& noexcept, T1>
+    {
+        using type = T1&;
+    };
+    template <typename R, typename... Args, typename T1>
+    struct p0704_<R(Args...) const&, T1>
+    {
+        using type = T1&;
+    };
+    template <typename R, typename... Args, typename T1>
+    struct p0704_<R(Args..., ...) const&, T1>
+    {
+        using type = T1&;
+    };
+
+    template <typename F, typename T1>
+    using p0704 = typename p0704_<F, T1>::type;
+#endif
+
     ///////////////////////////////////////////////////////////////////////////
     template <typename T, bool IsFunction>
     struct invoke_mem_ptr;
@@ -76,11 +121,11 @@ namespace eggs { namespace detail
         template <typename T1>
         constexpr auto operator()(T1&& t1) const
             noexcept(noexcept(
-                detail::mem_ptr_target<C, T1>(t1).*pm))
+                detail::mem_ptr_target<C, p0704<T, T1>>(t1).*pm))
          -> decltype(
-                detail::mem_ptr_target<C, T1>(t1).*pm)
+                detail::mem_ptr_target<C, p0704<T, T1>>(t1).*pm)
         {
-            return detail::mem_ptr_target<C, T1>(t1).*pm;
+            return detail::mem_ptr_target<C, p0704<T, T1>>(t1).*pm;
         }
     };
 
@@ -97,11 +142,11 @@ namespace eggs { namespace detail
         template <typename T1, typename... Tn>
         constexpr auto operator()(T1&& t1, Tn&&... tn) const
             noexcept(noexcept(
-                (detail::mem_ptr_target<C, T1>(t1).*pm)(EGGS_FWD(tn)...)))
+                (detail::mem_ptr_target<C, p0704<T, T1>>(t1).*pm)(EGGS_FWD(tn)...)))
          -> decltype(
-                (detail::mem_ptr_target<C, T1>(t1).*pm)(EGGS_FWD(tn)...))
+                (detail::mem_ptr_target<C, p0704<T, T1>>(t1).*pm)(EGGS_FWD(tn)...))
         {
-            return (detail::mem_ptr_target<C, T1>(t1).*pm)(EGGS_FWD(tn)...);
+            return (detail::mem_ptr_target<C, p0704<T, T1>>(t1).*pm)(EGGS_FWD(tn)...);
         }
     };
 

@@ -96,13 +96,8 @@ int main()
 
         CHECK(std::is_same<eggs::invoke_result<Fncl, C&, int>::type, int>::value);
         CHECK(std::is_same<eggs::invoke_result<Fncl, C const&, int>::type, int>::value);
-#if __cplusplus > 201703L || defined(_MSC_VER)  // C++20: P0704
         CHECK(std::is_same<eggs::invoke_result<Fncl, C&&, int>::type, int>::value);
         CHECK(std::is_same<eggs::invoke_result<Fncl, C const&&, int>::type, int>::value);
-#else
-        CHECK(no_result<eggs::invoke_result<Fncl, C&&, int>>::value);
-        CHECK(no_result<eggs::invoke_result<Fncl, C const&&, int>>::value);
-#endif
 
         using Fncr = int (C::*)(int) const&&;
 

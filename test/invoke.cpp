@@ -323,12 +323,8 @@ void test_mem_fun_ptr()
         CHECK_SCOPE(test_invoke_fun(std::move(r).cfun(40), p0012_nothrows, cfun, std::move(r), 40));
         CHECK_CONSTEXPR(eggs::invoke(cfun, std::move(r), 40));
         CHECK_SCOPE(test_not_invocable(lfun, std::move(r), 40));
-#if __cplusplus > 201703L || defined(_MSC_VER) // C++20: P0704
         CHECK_SCOPE(test_invoke_fun(std::move(r).clfun(40), p0012_nothrows, clfun, std::move(r), 40));
         CHECK_CONSTEXPR(eggs::invoke(clfun, std::move(r), 40));
-#else
-        CHECK_SCOPE(test_not_invocable(clfun, std::move(r), 40));
-#endif
         CHECK_SCOPE(test_invoke_fun(std::move(r).rfun(40), p0012_nothrows, rfun, std::move(r), 40));
         CHECK_CONSTEXPR14(eggs::invoke(rfun, std::move(r), 40));
         CHECK_SCOPE(test_invoke_fun(std::move(r).crfun(40), p0012_nothrows, crfun, std::move(r), 40));
@@ -339,12 +335,8 @@ void test_mem_fun_ptr()
         CHECK_CONSTEXPR(eggs::invoke(cfun, std::move(cr), 40));
         CHECK_SCOPE(test_not_invocable(lfun, std::move(cr), 40));
         CHECK_SCOPE(test_not_invocable(rfun, std::move(cr), 40));
-#if __cplusplus > 201703L || defined(_MSC_VER)  // C++20: P0704
         CHECK_SCOPE(test_invoke_fun(std::move(cr).clfun(40), p0012_nothrows, clfun, std::move(cr), 40));
         CHECK_CONSTEXPR(eggs::invoke(clfun, std::move(cr), 40));
-#else
-        CHECK_SCOPE(test_not_invocable(clfun, std::move(cr), 40));
-#endif
         CHECK_SCOPE(test_invoke_fun(std::move(cr).crfun(40), p0012_nothrows, crfun, std::move(cr), 40));
         CHECK_CONSTEXPR(eggs::invoke(crfun, std::move(cr), 40));
     }
