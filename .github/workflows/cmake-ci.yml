@@ -1,0 +1,107 @@
+# Copyright Agustin K-ballo Berge, Fusion Fenix 2020
+#
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+name: CMake
+
+on:
+  push:
+    branches:
+    paths:
+      - 'CMakeLists.txt'
+      - 'example/**'
+      - '.github/workflows/cmake-ci.yml'
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  find_package:
+    name: find_package - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Configure library
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_CXX_STANDARD=11 \
+            -DCMAKE_INSTALL_PREFIX=${PWD}/install \
+            ..
+
+    - name: Install library
+      working-directory: build
+      run: |
+        cmake --install .
+
+    - name: Configure example
+      working-directory: example
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_CXX_STANDARD=11 \
+            -DEggs.Invoke_DIR=${PWD}/../../build/install/lib/cmake/eggs.invoke \
+            ..
+
+    - name: Build example
+      working-directory: example/build
+      run: |
+        cmake --build .
+
+  add_subdirectory:
+    name: add_subdirectory - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Configure example
+      working-directory: example
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_CXX_STANDARD=11 \
+            -DEggs.Invoke_SOURCE_DIR=${PWD}/../.. \
+            ..
+
+    - name: Build example
+      working-directory: example/build
+      run: |
+        cmake --build .
+
+  fetch_content:
+    name: fetch_content - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Configure example
+      working-directory: example
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_CXX_STANDARD=11 \
+            ..
+
+    - name: Build example
+      working-directory: example/build
+      run: |
+        cmake --build .
