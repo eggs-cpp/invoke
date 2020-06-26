@@ -10,6 +10,7 @@ on:
     branches:
     paths:
       - 'CMakeLists.txt'
+      - 'example/**'
       - 'include/**'
       - 'test/**'
       - '.github/workflows/invoke-ci-cxx11.yml'
