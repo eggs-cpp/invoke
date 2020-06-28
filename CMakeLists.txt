@@ -33,11 +33,13 @@ else()
   set(ENABLE_INSTALL ${EGGS_INVOKE_ENABLE_INSTALL})
 endif()
 
+include(GNUInstallDirs)
+
 # Build
 add_library(_eggs_invoke INTERFACE)
 target_include_directories(_eggs_invoke INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 set_target_properties(_eggs_invoke
   PROPERTIES EXPORT_NAME Eggs::Invoke)
 
@@ -63,10 +65,11 @@ endif()
 
 # Install
 if (ENABLE_INSTALL)
-  install(DIRECTORY include/eggs DESTINATION include)
+  install(DIRECTORY include/eggs
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
   install(TARGETS _eggs_invoke EXPORT _targets)
   install(EXPORT _targets
-    DESTINATION lib/cmake/eggs.invoke
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/eggs.invoke
     FILE eggs.invoke-config.cmake)
 endif()
