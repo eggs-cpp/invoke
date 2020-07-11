@@ -82,6 +82,9 @@ jobs:
             -DCMAKE_CXX_STANDARD=14 \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DENABLE_BENCHMARKS=OFF \
+            -DENABLE_EXAMPLE=ON \
+            -DENABLE_TESTS=ON \
             ..
 
     - name: Build

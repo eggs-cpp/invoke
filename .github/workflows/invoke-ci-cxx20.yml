@@ -10,6 +10,7 @@ on:
     branches:
     paths:
       - 'CMakeLists.txt'
+      - 'benchmark/**'
       - 'example/**'
       - 'include/**'
       - 'test/**'
@@ -82,12 +83,21 @@ jobs:
             -DCMAKE_CXX_STANDARD=20 \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DENABLE_BENCHMARKS=ON \
+            -DENABLE_EXAMPLE=ON \
+            -DENABLE_TESTS=ON \
             ..
 
     - name: Build
       working-directory: build
       run: |
         cmake --build . --config ${{ matrix.build_type }}
+
+    - name: Benchmark
+      if: ${{ matrix.build_type == 'Debug' }}
+      working-directory: build
+      run: |
+        cmake --build . --target benchmark --config ${{ matrix.build_type }}
 
     - name: Test
       working-directory: build

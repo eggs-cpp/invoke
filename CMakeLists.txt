@@ -13,13 +13,16 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   include(CTest)
+  option(ENABLE_BENCHMARKS "Build the benchmarks" OFF)
   option(ENABLE_EXAMPLE "Build the example" ON)
   option(ENABLE_INSTALL "Enable installing the library" ON)
   set(ENABLE_TESTS ${BUILD_TESTING})
 else()
+  option(EGGS_INVOKE_ENABLE_BENCHMARK "Build the benchmarks" OFF)
   option(EGGS_INVOKE_ENABLE_EXAMPLE "Build the example" OFF)
   option(EGGS_INVOKE_ENABLE_INSTALL "Enable installing the library" OFF)
   option(EGGS_INVOKE_ENABLE_TESTS "Build the testing tree" OFF)
+  set(ENABLE_BENCHMARKS ${EGGS_INVOKE_ENABLE_BENCHMARKS})
   set(ENABLE_EXAMPLE ${EGGS_INVOKE_ENABLE_EXAMPLE})
   set(ENABLE_INSTALL ${EGGS_INVOKE_ENABLE_INSTALL})
   set(ENABLE_TESTS ${EGGS_INVOKE_ENABLE_TESTS})
@@ -34,6 +37,11 @@ set_target_properties(_eggs_invoke
   PROPERTIES EXPORT_NAME Eggs::Invoke)
 
 add_library(Eggs::Invoke ALIAS _eggs_invoke)
+
+# Benchmarks
+if (ENABLE_BENCHMARKS)
+  add_subdirectory(benchmark)
+endif()
 
 # Example
 if (ENABLE_EXAMPLE)
