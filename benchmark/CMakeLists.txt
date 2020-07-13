@@ -7,11 +7,26 @@
 
 cmake_minimum_required(VERSION 3.1)
 
+set(_benchmark_report YES)
+if (NOT CMAKE_GENERATOR MATCHES "Make|Ninja")
+  set(_benchmark_report NO)
+  set(_benchmark_report_warning
+    "CXX_COMPILER_LAUNCHER not supported by this generator, "
+    "needed for generating benchmark reports.")
+else()
+  find_package(Python3 3.6)
+  if (NOT Python3_FOUND)
+    set(_benchmark_report NO)
+    set(_benchmark_report_warning
+      "Python3 not found, needed for generating benchmark reports.")
+  endif()
+endif()
+
 function(add_benchmark NAME INPUT)
   cmake_parse_arguments("ARG"
     ""
     "INSTANTIATIONS"
-    ""
+    "CASES"
     ${ARGN})
   if (NOT DEFINED ARG_INSTANTIATIONS)
     set(ARG_INSTANTIATIONS 10000)
@@ -22,11 +37,27 @@ function(add_benchmark NAME INPUT)
     string(APPEND _instantiations "\n    benchmark<${_i}>();")
   endforeach()
 
+  set(_cases)
+  set(_labels)
+  while (ARG_CASES)
+    list(GET ARG_CASES 0 _case)
+    list(APPEND _cases ${_case})
+    list(GET ARG_CASES 1 _label)
+    list(APPEND _labels ${_label})
+    list(REMOVE_AT ARG_CASES 0 1)
+  endwhile()
+  list(APPEND _cases 0)
+  list(APPEND _labels "baseline")
+
   set(_sources)
   get_filename_component(_base ${INPUT} NAME_WE)
-  foreach(_benchmark 0 1 2 3)
+  foreach(_benchmark ${_cases})
     set(_output ${CMAKE_CURRENT_BINARY_DIR}/${_base}.${_benchmark}.cpp)
-    set(BENCHMARK_INSTANTIATIONS "void benchmark${_benchmark}() {${_instantiations}\n}")
+    set(BENCHMARK_INSTANTIATIONS "
+#if not defined BENCHMARK_WARMUP
+void benchmark${_benchmark}() {${_instantiations}\n}
+#endif
+")
     configure_file(${INPUT} ${_output} @ONLY)
 
     set_source_files_properties(${_output} PROPERTIES
@@ -41,6 +72,24 @@ function(add_benchmark NAME INPUT)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(${NAME} PRIVATE /bigobj /Bt+)
   endif()
+
+  if (NOT _benchmark_report)
+    message(WARNING ${_benchmark_report_warning})
+  else()
+    string(REPLACE ";" "|" _cases "${_cases}")
+    string(REPLACE ";" "|" _labels "${_labels}")
+    set_property(TARGET ${NAME}
+      PROPERTY CXX_COMPILER_LAUNCHER
+        ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/compiler_launcher.py
+          --compiler_id=${CMAKE_CXX_COMPILER_ID}
+          --compiler_version=${CMAKE_CXX_COMPILER_VERSION}
+          --target=${NAME}
+          --cases=${_cases}
+          --labels=${_labels}
+          --instantiations=${ARG_INSTANTIATIONS}
+          --object=<OBJECT>
+          --)
+  endif()
 endfunction()
 
 set(_benchmarks
@@ -48,9 +97,16 @@ set(_benchmarks
   function
   member_function
   member_object)
+
 add_custom_target(benchmark)
+set_property(TARGET benchmark PROPERTY FOLDER "benchmark")
+
 foreach(_benchmark ${_benchmarks})
-  add_benchmark(benchmark.${_benchmark} ${_benchmark}.cpp.in)
+  add_benchmark(benchmark.${_benchmark} ${_benchmark}.cpp.in
+    CASES
+      1 "plain call"
+      2 "std::invoke"
+      3 "eggs::invoke")
   target_link_libraries(benchmark.${_benchmark} Eggs::Invoke)
   set_property(TARGET benchmark.${_benchmark} PROPERTY FOLDER "benchmark")
 
