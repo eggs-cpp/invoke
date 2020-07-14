@@ -42,24 +42,37 @@ if __name__ == '__main__':
     #print(f'subprocess.run({args.cmd})')
 
     # warm up
-    result = subprocess.run(args.cmd + ['-DBENCHMARK_WARMUP'],
+    process = subprocess.Popen(args.cmd + ['-DBENCHMARK_WARMUP'],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True)
-    if result.returncode != 0:
-        print(result.stdout)
-        sys.exit(result.returncode)
+    try:
+        stdout, stderr = process.communicate(input)
+    except:
+        process.kill()
+        raise
+    returncode = process.poll()
+    if returncode != 0:
+        print(stdout)
+        sys.exit(returncode)
 
     # run compiler
     start_time = time.time()
-    result = subprocess.run(args.cmd,
+    process = subprocess.Popen(args.cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True)
+    try:
+        stdout, stderr = process.communicate(input)
+    except:
+        process.kill()
+        raise
+    returncode = process.poll()
     end_time = time.time()
-    print(result.stdout)
-    if result.returncode != 0:
-        sys.exit(result.returncode)
+
+    print(stdout)
+    if returncode != 0:
+        sys.exit(returncode)
 
     # extract information
     compilation_time = end_time - start_time
@@ -78,7 +91,7 @@ if __name__ == '__main__':
         # TOTAL : <USER_TIME> <SYSTEM_TIME> <WALL_TIME> <MEMORY_USAGE> kB
         m = re.search(
             '^ TOTAL +: +([0-9.]+) +([0-9.]+) +([0-9.]+) +([0-9]+) kB$',
-            result.stdout,
+            stdout,
             re.MULTILINE)
         if m:
             user_time = float(m.group(1))
@@ -87,12 +100,12 @@ if __name__ == '__main__':
             wall_time = float(m.group(3))
             memory_usage = int(m.group(4))
     elif 'Clang' in args.compiler_id:
-        pos = result.stdout.find("Clang front-end time report")
+        pos = stdout.find("Clang front-end time report")
         if pos != -1:
             # <USER_TIME> (100.0%) <SYSTEM_TIME> (100.0%) <COMPILATION_TIME> (100.0%) <WALL_TIME> (100.0%) Total
             m = re.search(
                 '^ +([0-9.]+) +\\(100.0%\\) +([0-9.]+) +\\(100.0%\\) +([0-9.]+) +\\(100.0%\\) +([0-9.]+) +\\(100.0%\\) +Total$',
-                result.stdout[pos:], re.MULTILINE)
+                stdout[pos:], re.MULTILINE)
             if m:
                 user_time = float(m.group(1))
                 system_time = float(m.group(2))
@@ -104,7 +117,7 @@ if __name__ == '__main__':
         compilation_time = 0.0
         for m in re.finditer(
             '^time\\(.*\\)=([0-9.]+)s',
-            result.stdout, re.MULTILINE):
+            stdout, re.MULTILINE):
             compilation_time += float(m.group(1))
 
     # print report
