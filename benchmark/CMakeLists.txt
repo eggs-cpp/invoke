@@ -25,11 +25,14 @@ endif()
 function(add_benchmark NAME INPUT)
   cmake_parse_arguments("ARG"
     ""
-    "INSTANTIATIONS"
+    "INSTANTIATIONS;OUTPUT;REPORT_TEMPLATE"
     "CASES"
     ${ARGN})
   if (NOT DEFINED ARG_INSTANTIATIONS)
     set(ARG_INSTANTIATIONS 10000)
+  endif()
+  if (NOT DEFINED ARG_OUTPUT)
+    set(ARG_OUTPUT ${NAME}.html)
   endif()
 
   set(_instantiations "")
@@ -89,6 +92,25 @@ void benchmark${_benchmark}() {${_instantiations}\n}
           --instantiations=${ARG_INSTANTIATIONS}
           --object=<OBJECT>
           --)
+
+    get_filename_component(INPUT ${INPUT} ABSOLUTE)
+    get_filename_component(ARG_REPORT_TEMPLATE ${ARG_REPORT_TEMPLATE} ABSOLUTE)
+    get_filename_component(ARG_OUTPUT ${ARG_OUTPUT} ABSOLUTE
+      BASE_DIR ${CMAKE_CURRENT_BINARY_DIR})
+    add_custom_command(
+      OUTPUT ${ARG_OUTPUT}
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_report.py
+        --target=${NAME}
+        --source=${INPUT}
+        --instantiations=${ARG_INSTANTIATIONS}
+        --output=${ARG_OUTPUT}
+        --template=${ARG_REPORT_TEMPLATE}
+        --objects="$<TARGET_OBJECTS:${NAME}>"
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      DEPENDS ${NAME} ${ARG_REPORT_TEMPLATE} $<TARGET_OBJECTS:${NAME}>)
+
+    add_custom_target(${NAME}.report DEPENDS ${ARG_OUTPUT})
+    set_property(TARGET ${NAME}.report PROPERTY FOLDER "benchmark/report")
   endif()
 endfunction()
 
@@ -103,6 +125,8 @@ set_property(TARGET benchmark PROPERTY FOLDER "benchmark")
 
 foreach(_benchmark ${_benchmarks})
   add_benchmark(benchmark.${_benchmark} ${_benchmark}.cpp.in
+    REPORT_TEMPLATE template/report.html.in
+    OUTPUT reports/${_benchmark}.html
     CASES
       1 "plain call"
       2 "std::invoke"
@@ -111,4 +135,7 @@ foreach(_benchmark ${_benchmarks})
   set_property(TARGET benchmark.${_benchmark} PROPERTY FOLDER "benchmark")
 
   add_dependencies(benchmark benchmark.${_benchmark})
+  if (_benchmark_report)
+    add_dependencies(benchmark benchmark.${_benchmark}.report)
+  endif()
 endforeach()

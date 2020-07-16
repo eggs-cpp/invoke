@@ -133,7 +133,7 @@ if __name__ == '__main__':
         'benchmark': int(benchmark),
         'label': label,
         'compilation_time': compilation_time,
-        'memory_usage': memory_usage,
+        'memory_usage': memory_usage * 1024 if memory_usage != '-' else '-',
         'object_size': object_size,
     }
     with open(args.object + '.benchmark.json', 'w') as file:

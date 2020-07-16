@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script>@INCLUDE('d3.min.js')@</script>
+    <script>@INCLUDE('nv.d3.min.js')@</script>
+    <style>@INCLUDE('nv.d3.min.css')@</style>
+
+    <script>@INCLUDE('prism.min.js')@</script>
+    <style>@INCLUDE('prism.min.css')@</style>
+
+    <style>
+        text {
+            font: 12px sans-serif;
+        }
+        svg {
+            display: block;
+        }
+        html, body, #chart1, svg {
+            margin: 0px;
+            padding: 0px;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+    var aspects = @ASPECTS@;
+    var datum = @DATUM@;
+</script>
+
+    <label for="aspect">Aspect:</label>
+    <select name="aspect" id="aspect">
+    </select>
+
+    <input type="checkbox" id="subtractBaseline" checked="checked">
+    <label for="subtractBaseline">Subtract Baseline</label>
+
+    <div id="chart1">
+        <svg></svg>
+    </div>
+
+    Source code:
+    <pre>
+    <code class="language-cpp">
+@SOURCE_CODE@
+    </code>
+    </pre>
+
+    <p>Instantiations: <strong>@INSTANTIATIONS@</strong></p>
+
+    <script>
+        var aspect = document.getElementById('aspect');
+        var subtractBaseline = document.getElementById('subtractBaseline');
+
+        for (var i = 0; i < aspects.length; i++) {
+            var opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = aspects[i].key;
+            aspect.appendChild(opt);
+        }
+
+        function displayGraph(data, aspect, subtractBaseline) {
+            nv.addGraph(function () {
+                var chart = nv.models.discreteBarChart()
+                    .x(function (d) { return '[' + d.benchmark + '] ' + d.label })
+                    .y(function (d) {
+                        var value = d[aspect.field];
+                        if (subtractBaseline)
+                            value -= aspect.baseline;
+                        return value;
+                    })
+                    .showValues(true)
+                    .duration(250)
+                    ;
+
+                var format = function (d) {
+                    return d3.format(aspect.format)(d) + aspect.unit;
+                }
+                chart.valueFormat(format);
+                chart.yAxis.tickFormat(format);
+
+                d3.select('#chart1 svg')
+                    .datum([data])
+                    .call(chart)
+                    ;
+
+                nv.utils.windowResize(chart.update);
+                return chart;
+            });
+        }
+
+        var onChangeEvent = function () {
+            displayGraph(datum,
+                aspects[aspect.value],
+                subtractBaseline.checked);
+        };
+        aspect.addEventListener('change', onChangeEvent);
+        subtractBaseline.addEventListener('change', onChangeEvent);
+
+        displayGraph(datum, aspects[0], true)
+    </script>
+</body>
+</html>

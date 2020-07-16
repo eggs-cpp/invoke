@@ -99,6 +99,15 @@ jobs:
       run: |
         cmake --build . --target benchmark --config ${{ matrix.build_type }}
 
+    - name: Upload benchmark report
+      if: ${{ matrix.build_type == 'Debug' && matrix.config.generator == 'Ninja' }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: benchmark report - ${{ matrix.config.name }}
+        path: |
+          build/benchmark/benchmark.*.json
+          build/benchmark/reports/
+
     - name: Test
       working-directory: build
       run: |
