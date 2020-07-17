@@ -383,9 +383,10 @@ namespace eggs
     //! - _Remarks_: This function shall not participate in overload resolution
     //!   unless `eggs::is_invocable_v<F, Args...>` is `true`.
     template <typename Fn, typename... ArgTypes>
-    constexpr invoke_result_t<Fn, ArgTypes...>
+    constexpr auto
     invoke(Fn&& f, ArgTypes&&... args)
-        noexcept(is_nothrow_invocable<Fn, ArgTypes...>::value)
+        noexcept(noexcept(EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...)))
+     -> decltype(EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...))
     {
         return EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...);
     }
@@ -399,11 +400,11 @@ namespace eggs
     //!
     //! - _Remarks_: This function shall not participate in overload resolution
     //!   unless `eggs::is_invocable_r_v<R, F, Args...>` is `true`.
-    template <typename R, typename Fn, typename... ArgTypes, typename Enable =
-        typename std::enable_if<is_invocable_r<R, Fn, ArgTypes...>::value>::type>
-    constexpr R
+    template <typename R, typename Fn, typename... ArgTypes>
+    constexpr auto
     invoke_r(Fn&& f, ArgTypes&&... args)
-        noexcept(is_nothrow_invocable_r<R, Fn, ArgTypes...>::value)
+        noexcept(noexcept(EGGS_INVOKE_R(R, EGGS_FWD(f), EGGS_FWD(args)...)))
+     -> decltype(EGGS_INVOKE_R(R, EGGS_FWD(f), EGGS_FWD(args)...))
     {
         return EGGS_INVOKE_R(R, EGGS_FWD(f), EGGS_FWD(args)...);
     }
