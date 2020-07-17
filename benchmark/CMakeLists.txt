@@ -125,6 +125,7 @@ set_property(TARGET benchmark PROPERTY FOLDER "benchmark")
 
 foreach(_benchmark ${_benchmarks})
   add_benchmark(benchmark.${_benchmark} ${_benchmark}.cpp.in
+    INSTANTIATIONS ${BENCHMARK_INSTANTIATIONS}
     REPORT_TEMPLATE template/report.html.in
     OUTPUT reports/${_benchmark}.html
     CASES

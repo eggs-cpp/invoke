@@ -3,7 +3,7 @@
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-name: Eggs.Invoke C++17
+name: Eggs.Invoke Benchmark
 
 on:
   push:
@@ -11,10 +11,8 @@ on:
     paths:
       - 'CMakeLists.txt'
       - 'benchmark/**'
-      - 'example/**'
       - 'include/**'
-      - 'test/**'
-      - '.github/workflows/invoke-ci-cxx17.yml'
+      - '.github/workflows/invoke-benchmark.yml'
   pull_request:
 
 defaults:
@@ -23,7 +21,7 @@ defaults:
 
 jobs:
   build:
-    name: ${{ matrix.config.name }} - ${{ matrix.build_type }}
+    name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
@@ -64,7 +62,6 @@ jobs:
             cc: "cl", cxx: "cl",
             cxxflags: "-W4 -WX -permissive-"
           }
-        build_type: [Debug, Release]
 
     steps:
     - uses: actions/checkout@v1
@@ -82,20 +79,43 @@ jobs:
         cmake -G"${{ matrix.config.generator }}" \
             -DCMAKE_CXX_STANDARD=17 \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DBUILD_BENCHMARKS=ON \
-            -DBENCHMARK_INSTANTIATIONS=1 \
-            -DBUILD_EXAMPLE=ON \
-            -DBUILD_TESTING=ON \
+            -DBENCHMARK_INSTANTIATIONS=10000 \
+            -DBUILD_EXAMPLE=OFF \
+            -DBUILD_TESTING=OFF \
             ..
 
-    - name: Build
+    - name: Benchmark - function
       working-directory: build
       run: |
-        cmake --build . --config ${{ matrix.build_type }}
-        cmake --build . --target benchmark --config ${{ matrix.build_type }}
+        cmake --build . --target benchmark.function
 
-    - name: Test
+    - name: Benchmark - member_object
       working-directory: build
       run: |
-        ctest --build-config ${{ matrix.build_type }} --output-on-failure
+        cmake --build . --target benchmark.member_object
+
+    - name: Benchmark - member_function
+      working-directory: build
+      run: |
+        cmake --build . --target benchmark.member_function
+
+    - name: Benchmark - callable
+      working-directory: build
+      run: |
+        cmake --build . --target benchmark.callable
+
+    - name: Generate benchmark reports
+      working-directory: build
+      if: ${{ matrix.config.generator == 'Ninja' }}
+      run: |
+        cmake --build . --target benchmark
+
+    - name: Upload benchmark reports
+      if: ${{ matrix.config.generator == 'Ninja' }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: benchmark report - ${{ matrix.config.name }}
+        path: |
+          build/benchmark/benchmark.*.json
+          build/benchmark/reports/
