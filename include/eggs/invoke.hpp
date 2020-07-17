@@ -15,6 +15,8 @@
 
 namespace eggs { namespace detail
 {
+#define EGGS_FWD(...) static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
+
     ///////////////////////////////////////////////////////////////////////////
     template <typename T>
     struct is_reference_wrapper
@@ -33,7 +35,7 @@ namespace eggs { namespace detail
         std::is_base_of<C, typename std::remove_reference<T>::type>::value>::type>
     static constexpr T&& mem_ptr_target(T& v) noexcept
     {
-        return std::forward<T>(v);
+        return static_cast<T&&>(v);
     }
 
     // when `pm` is a pointer to member of a class `C` and
@@ -51,10 +53,10 @@ namespace eggs { namespace detail
     // satisfy the previous two items;
     template <typename C, typename T>
     static constexpr auto mem_ptr_target(T& v)
-        noexcept(noexcept(*std::forward<T>(v)))
-     -> decltype(*std::forward<T>(v))
+        noexcept(noexcept(*static_cast<T&&>(v)))
+     -> decltype(*static_cast<T&&>(v))
     {
-        return *std::forward<T>(v);
+        return *static_cast<T&&>(v);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -95,11 +97,11 @@ namespace eggs { namespace detail
         template <typename T1, typename... Tn>
         constexpr auto operator()(T1&& t1, Tn&&... tn) const
             noexcept(noexcept(
-                (detail::mem_ptr_target<C, T1>(t1).*pm)(std::forward<Tn>(tn)...)))
+                (detail::mem_ptr_target<C, T1>(t1).*pm)(EGGS_FWD(tn)...)))
          -> decltype(
-                (detail::mem_ptr_target<C, T1>(t1).*pm)(std::forward<Tn>(tn)...))
+                (detail::mem_ptr_target<C, T1>(t1).*pm)(EGGS_FWD(tn)...))
         {
-            return (detail::mem_ptr_target<C, T1>(t1).*pm)(std::forward<Tn>(tn)...);
+            return (detail::mem_ptr_target<C, T1>(t1).*pm)(EGGS_FWD(tn)...);
         }
     };
 
@@ -134,11 +136,11 @@ namespace eggs { namespace detail
         template <typename F, typename... Args>
         static constexpr auto call(F&& f, Args&&... args)
             noexcept(noexcept(conversion(
-                EGGS_INVOKE(std::forward<F>(f), std::forward<Args>(args)...))))
+                EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...))))
          -> decltype(conversion(
-                EGGS_INVOKE(std::forward<F>(f), std::forward<Args>(args)...)))
+                EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...)))
         {
-            return EGGS_INVOKE(std::forward<F>(f), std::forward<Args>(args)...);
+            return EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...);
         }
     };
 
@@ -149,12 +151,12 @@ namespace eggs { namespace detail
         template <typename F, typename... Args>
         static constexpr auto call(F&& f, Args&&... args)
             noexcept(noexcept(
-                EGGS_INVOKE(std::forward<F>(f), std::forward<Args>(args)...)))
+                EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...)))
          -> decltype(static_cast<void>(
-                EGGS_INVOKE(std::forward<F>(f), std::forward<Args>(args)...)))
+                EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...)))
         {
             return static_cast<void>(
-                EGGS_INVOKE(std::forward<F>(f), std::forward<Args>(args)...));
+                EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...));
         }
     };
 
@@ -385,8 +387,7 @@ namespace eggs
     invoke(Fn&& f, ArgTypes&&... args)
         noexcept(is_nothrow_invocable<Fn, ArgTypes...>::value)
     {
-        return EGGS_INVOKE(
-            std::forward<Fn>(f), std::forward<ArgTypes>(args)...);
+        return EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -404,10 +405,10 @@ namespace eggs
     invoke_r(Fn&& f, ArgTypes&&... args)
         noexcept(is_nothrow_invocable_r<R, Fn, ArgTypes...>::value)
     {
-        return EGGS_INVOKE_R(
-            R, std::forward<Fn>(f), std::forward<ArgTypes>(args)...);
+        return EGGS_INVOKE_R(R, EGGS_FWD(f), EGGS_FWD(args)...);
     }
 
+#undef EGGS_FWD
 }    // namespace eggs
 
 #endif /*EGGS_INVOKE_HPP*/
