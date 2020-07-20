@@ -75,6 +75,8 @@ void benchmark${_benchmark}() {${_instantiations}\n}
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(${NAME} PRIVATE /bigobj /Bt+)
   endif()
+  set_target_properties(${NAME} PROPERTIES
+    JOB_POOL_COMPILE "console")
 
   if (NOT _benchmark_report)
     message(WARNING ${_benchmark_report_warning})

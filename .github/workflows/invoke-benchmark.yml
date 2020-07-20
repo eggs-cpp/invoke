@@ -32,35 +32,40 @@ jobs:
             os: ubuntu-latest,
             generator: Ninja,
             cc: "gcc-9", cxx: "g++-9",
-            cxxflags: "-Wall -Wextra -Werror"
+            cxxflags: "-Wall -Wextra -Werror",
+            buildflags: "-j1"
           }
         - {
             name: "Linux Clang 9",
             os: ubuntu-latest,
             generator: Ninja,
             cc: "clang-9", cxx: "clang++-9",
-            cxxflags: "-Wall -Wextra -Werror"
+            cxxflags: "-Wall -Wextra -Werror",
+            buildflags: "-j1"
           }
         - {
             name: "macOS GCC",
             os: macos-latest,
             generator: Ninja,
             cc: "gcc", cxx: "g++",
-            cxxflags: "-Wall -Wextra -Werror"
+            cxxflags: "-Wall -Wextra -Werror",
+            buildflags: "-j1"
           }
         - {
             name: "macOS Clang",
             os: macos-latest,
             generator: Ninja,
             cc: "clang", cxx: "clang++",
-            cxxflags: "-Wall -Wextra -Werror"
+            cxxflags: "-Wall -Wextra -Werror",
+            buildflags: "-j1"
           }
         - {
             name: "Windows MSVC 2019",
             os: windows-latest,
             generator: Visual Studio 16 2019,
             cc: "cl", cxx: "cl",
-            cxxflags: "-W4 -WX -permissive-"
+            cxxflags: "-W4 -WX -permissive-",
+            buildflags: "-m:1"
           }
 
     steps:
@@ -88,22 +93,26 @@ jobs:
     - name: Benchmark - function
       working-directory: build
       run: |
-        cmake --build . --target benchmark.function
+        cmake --build . --target benchmark.function \
+            -- ${{ matrix.config.buildflags }}
 
     - name: Benchmark - member_object
       working-directory: build
       run: |
-        cmake --build . --target benchmark.member_object
+        cmake --build . --target benchmark.member_object \
+            -- ${{ matrix.config.buildflags }}
 
     - name: Benchmark - member_function
       working-directory: build
       run: |
-        cmake --build . --target benchmark.member_function
+        cmake --build . --target benchmark.member_function \
+            -- ${{ matrix.config.buildflags }}
 
     - name: Benchmark - callable
       working-directory: build
       run: |
-        cmake --build . --target benchmark.callable
+        cmake --build . --target benchmark.callable \
+            -- ${{ matrix.config.buildflags }}
 
     - name: Generate benchmark reports
       working-directory: build
