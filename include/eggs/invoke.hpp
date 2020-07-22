@@ -29,42 +29,14 @@ namespace eggs { namespace detail
     {};
 
     ///////////////////////////////////////////////////////////////////////////
-    // when `pm` is a pointer to member of a class `C` and
-    // `is_base_of_v<C, remove_reference_t<T>>` is `true`;
-    template <typename C, typename T, typename Enable = typename std::enable_if<
-        std::is_base_of<C, typename std::remove_reference<T>::type>::value>::type>
-    static constexpr T&& mem_ptr_target(T& v) noexcept
-    {
-        return static_cast<T&&>(v);
-    }
-
-    // when `pm` is a pointer to member of a class `C` and
-    // `remove_cvref_t<T>` is a specialization of `reference_wrapper`;
-    template <typename C, typename T, typename Enable = typename std::enable_if<
-        detail::is_reference_wrapper<typename std::remove_cv<
-            typename std::remove_reference<T>::type>::type>::value>::type>
-    static constexpr auto mem_ptr_target(T& v) noexcept
-     -> decltype(v.get())
-    {
-        return v.get();
-    }
-
-    // when `pm` is a pointer to member of a class `C` and `T` does not
-    // satisfy the previous two items;
-    template <typename C, typename T>
-    static constexpr auto mem_ptr_target(T& v)
-        noexcept(noexcept(*static_cast<T&&>(v)))
-     -> decltype(*static_cast<T&&>(v))
-    {
-        return *static_cast<T&&>(v);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    template <typename T, bool IsFunction>
+    template <typename C, typename T, bool Ref, bool RefWrapper,
+        bool IsFunction = std::is_function<T>::value>
     struct invoke_mem_ptr;
 
-    template <typename T, typename C>
-    struct invoke_mem_ptr<T C::*, /*IsFunction=*/false>
+    // when `pm` is a pointer to member of a class `C` and
+    // `is_base_of_v<C, remove_reference_t<T>>` is `true`;
+    template <typename C, typename T>
+    struct invoke_mem_ptr<C, T, /*Ref=*/true, /*RefWrapper=*/false, /*IsFunction=*/false>
     {
         T C::*pm;
 
@@ -75,17 +47,15 @@ namespace eggs { namespace detail
 
         template <typename T1>
         constexpr auto operator()(T1&& t1) const
-            noexcept(noexcept(
-                detail::mem_ptr_target<C, T1>(t1).*pm))
-         -> decltype(
-                detail::mem_ptr_target<C, T1>(t1).*pm)
+            noexcept(noexcept(EGGS_FWD(t1).*pm))
+         -> decltype(EGGS_FWD(t1).*pm)
         {
-            return detail::mem_ptr_target<C, T1>(t1).*pm;
+            return EGGS_FWD(t1).*pm;
         }
     };
 
-    template <typename T, typename C>
-    struct invoke_mem_ptr<T C::*, /*IsFunction=*/true>
+    template <typename C, typename T>
+    struct invoke_mem_ptr<C, T, /*Ref=*/true, /*RefWrapper=*/false, /*IsFunction=*/true>
     {
         T C::*pm;
 
@@ -96,34 +66,120 @@ namespace eggs { namespace detail
 
         template <typename T1, typename... Tn>
         constexpr auto operator()(T1&& t1, Tn&&... tn) const
-            noexcept(noexcept(
-                (detail::mem_ptr_target<C, T1>(t1).*pm)(EGGS_FWD(tn)...)))
-         -> decltype(
-                (detail::mem_ptr_target<C, T1>(t1).*pm)(EGGS_FWD(tn)...))
+            noexcept(noexcept((EGGS_FWD(t1).*pm)(EGGS_FWD(tn)...)))
+         -> decltype((EGGS_FWD(t1).*pm)(EGGS_FWD(tn)...))
         {
-            return (detail::mem_ptr_target<C, T1>(t1).*pm)(EGGS_FWD(tn)...);
+            return (EGGS_FWD(t1).*pm)(EGGS_FWD(tn)...);
+        }
+    };
+
+    // when `pm` is a pointer to member of a class `C` and
+    // `remove_cvref_t<T>` is a specialization of `reference_wrapper`;
+    template <typename C, typename T>
+    struct invoke_mem_ptr<C, T, /*Ref=*/false, /*RefWrapper=*/true, /*IsFunction=*/false>
+    {
+        T C::*pm;
+
+    public:
+        constexpr invoke_mem_ptr(T C::*pm) noexcept
+          : pm(pm)
+        {}
+
+        template <typename T1>
+        constexpr auto operator()(T1&& t1) const
+            noexcept(noexcept(t1.get().*pm))
+         -> decltype(t1.get().*pm)
+        {
+            return t1.get().*pm;
+        }
+    };
+
+    template <typename C, typename T>
+    struct invoke_mem_ptr<C, T, /*Ref=*/false, /*RefWrapper=*/true, /*IsFunction=*/true>
+    {
+        T C::*pm;
+
+    public:
+        constexpr invoke_mem_ptr(T C::*pm) noexcept
+          : pm(pm)
+        {}
+
+        template <typename T1, typename... Tn>
+        constexpr auto operator()(T1&& t1, Tn&&... tn) const
+            noexcept(noexcept((t1.get().*pm)(EGGS_FWD(tn)...)))
+         -> decltype((t1.get().*pm)(EGGS_FWD(tn)...))
+        {
+            return (t1.get().*pm)(EGGS_FWD(tn)...);
+        }
+    };
+
+    // when `pm` is a pointer to member of a class `C` and `T` does not
+    // satisfy the previous two items;
+    template <typename C, typename T>
+    struct invoke_mem_ptr<C, T, /*Ref=*/false, /*RefWrapper=*/false, /*IsFunction=*/false>
+    {
+        T C::*pm;
+
+    public:
+        constexpr invoke_mem_ptr(T C::*pm) noexcept
+          : pm(pm)
+        {}
+
+        template <typename T1>
+        constexpr auto operator()(T1&& t1) const
+            noexcept(noexcept((*EGGS_FWD(t1)).*pm))
+         -> decltype((*EGGS_FWD(t1)).*pm)
+        {
+            return (*EGGS_FWD(t1)).*pm;
+        }
+    };
+
+    template <typename C, typename T>
+    struct invoke_mem_ptr<C, T, /*Ref=*/false, /*RefWrapper=*/false, /*IsFunction=*/true>
+    {
+        T C::*pm;
+
+    public:
+        constexpr invoke_mem_ptr(T C::*pm) noexcept
+          : pm(pm)
+        {}
+
+        template <typename T1, typename... Tn>
+        constexpr auto operator()(T1&& t1, Tn&&... tn) const
+            noexcept(noexcept(((*EGGS_FWD(t1)).*pm)(EGGS_FWD(tn)...)))
+         -> decltype(((*EGGS_FWD(t1)).*pm)(EGGS_FWD(tn)...))
+        {
+            return ((*EGGS_FWD(t1)).*pm)(EGGS_FWD(tn)...);
         }
     };
 
     ///////////////////////////////////////////////////////////////////////////
-    template <typename F, typename FD = typename std::remove_cv<
+    template <typename F, typename T1, typename FD = typename std::remove_cv<
         typename std::remove_reference<F>::type>::type>
     struct dispatch_invoke
     {
         using type = F&&;
     };
 
-    template <typename F, typename T, typename C>
-    struct dispatch_invoke<F, T C::*>
+    template <typename F, typename T1, typename T, typename C>
+    struct dispatch_invoke<F, T1, T C::*>
     {
-        using type = invoke_mem_ptr<T C::*, std::is_function<T>::value>;
+        using T1d = typename std::remove_cv<typename std::remove_reference<T1>::type>::type;
+        using type = invoke_mem_ptr<C, T,
+            /*Ref=*/std::is_base_of<C, T1d>::value,
+            /*RefWrapper=*/detail::is_reference_wrapper<T1d>::value>;
     };
 
+    template <typename F, typename T1>
+    constexpr auto invoke(F&&, T1&&, ...) noexcept
+     -> typename dispatch_invoke<F, T1>::type;
+
     template <typename F>
-    using invoke = typename dispatch_invoke<F>::type;
+    constexpr auto invoke(F&&) noexcept
+     -> typename dispatch_invoke<F, void>::type;
 
 #define EGGS_INVOKE(F, ...)                                                    \
-    (static_cast<::eggs::detail::invoke<decltype((F))>>(F)(__VA_ARGS__))
+    (static_cast<decltype(::eggs::detail::invoke(F, __VA_ARGS__))>(F)(__VA_ARGS__))
 
     // `INVOKE(f, t1, t2, ..., tN)` implicitly converted to `R`.
     template <typename R, typename RD = typename std::remove_cv<R>::type>
