@@ -44,14 +44,6 @@ jobs:
             buildflags: "-j1"
           }
         - {
-            name: "macOS GCC",
-            os: macos-latest,
-            generator: Ninja,
-            cc: "gcc", cxx: "g++",
-            cxxflags: "-Wall -Wextra -Werror",
-            buildflags: "-j1"
-          }
-        - {
             name: "macOS Clang",
             os: macos-latest,
             generator: Ninja,
