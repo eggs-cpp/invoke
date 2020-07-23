@@ -18,17 +18,6 @@ namespace eggs { namespace detail
 #define EGGS_FWD(...) static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
 
     ///////////////////////////////////////////////////////////////////////////
-    template <typename T>
-    struct is_reference_wrapper
-      : std::false_type
-    {};
-
-    template <typename T>
-    struct is_reference_wrapper<std::reference_wrapper<T>>
-      : std::true_type
-    {};
-
-    ///////////////////////////////////////////////////////////////////////////
     template <typename C, typename T, bool Ref, bool RefWrapper,
         bool IsFunction = std::is_function<T>::value>
     struct invoke_mem_ptr;
@@ -154,29 +143,21 @@ namespace eggs { namespace detail
     };
 
     ///////////////////////////////////////////////////////////////////////////
-    template <typename F, typename T1, typename FD = typename std::remove_cv<
-        typename std::remove_reference<F>::type>::type>
-    struct dispatch_invoke
-    {
-        using type = F&&;
-    };
-
-    template <typename F, typename T1, typename T, typename C>
-    struct dispatch_invoke<F, T1, T C::*>
-    {
-        using T1d = typename std::remove_cv<typename std::remove_reference<T1>::type>::type;
-        using type = invoke_mem_ptr<C, T,
-            /*Ref=*/std::is_base_of<C, T1d>::value,
-            /*RefWrapper=*/detail::is_reference_wrapper<T1d>::value>;
-    };
-
-    template <typename F, typename T1>
-    constexpr auto invoke(F&&, T1&&, ...) noexcept
-     -> typename dispatch_invoke<F, T1>::type;
-
     template <typename F>
-    constexpr auto invoke(F&&) noexcept
-     -> typename dispatch_invoke<F, void>::type;
+    auto invoke(F&&, ...)
+     -> F&&;
+
+    template <typename T, typename C, typename T1>
+    auto invoke(T C::*, T1 const&, ...)
+     -> invoke_mem_ptr<C, T,
+            /*Ref=*/std::is_base_of<C, T1>::value,
+            /*RefWrapper=*/false>;
+
+    template <typename T, typename C, typename X>
+    auto invoke(T C::*, std::reference_wrapper<X>, ...)
+     -> invoke_mem_ptr<C, T,
+            /*Ref=*/false,
+            /*RefWrapper=*/true>;
 
 #define EGGS_INVOKE(F, ...)                                                    \
     (static_cast<decltype(::eggs::detail::invoke(F, __VA_ARGS__))>(F)(__VA_ARGS__))
