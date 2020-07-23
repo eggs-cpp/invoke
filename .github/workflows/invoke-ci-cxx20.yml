@@ -57,6 +57,13 @@ jobs:
             cc: "cl", cxx: "cl",
             cxxflags: "-W4 -WX -permissive-"
           }
+        - {
+            name: "Windows MSVC 2019 (permissive)",
+            os: windows-latest,
+            generator: Visual Studio 16 2019,
+            cc: "cl", cxx: "cl",
+            cxxflags: "-W4 -WX"
+          }
         build_type: [Debug, Release]
 
     steps:

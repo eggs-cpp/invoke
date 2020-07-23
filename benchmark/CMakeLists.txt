@@ -57,7 +57,7 @@ function(add_benchmark NAME INPUT)
   foreach(_benchmark ${_cases})
     set(_output ${CMAKE_CURRENT_BINARY_DIR}/${_base}.${_benchmark}.cpp)
     set(BENCHMARK_INSTANTIATIONS "
-#if not defined BENCHMARK_WARMUP
+#if !defined BENCHMARK_WARMUP
 void benchmark${_benchmark}() {${_instantiations}\n}
 #endif
 ")
