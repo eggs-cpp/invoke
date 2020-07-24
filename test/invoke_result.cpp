@@ -139,25 +139,80 @@ int main()
         CHECK(no_result<eggs::invoke_result<Fn, C&, int>>::value);
     }
 
-    /* fun-obj */ {
+    /* call-op */ {
         struct Fn
         {
-            int operator()(int) const noexcept
-            {
-                return 42;
-            }
+            int operator()(int);
         };
 
-        CHECK(std::is_same<eggs::invoke_result<Fn, int>::type, int>::value);
-        CHECK(std::is_same<eggs::invoke_result<Fn, conv_to<int>>::type, int>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fn&, int>::type, int>::value);
+        CHECK(no_result<eggs::invoke_result<Fn const&, int>>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fn&&, int>::type, int>::value);
+        CHECK(no_result<eggs::invoke_result<Fn const&&, int>>::value);
 
         CHECK(no_result<eggs::invoke_result<Fn>>::value);
         CHECK(no_result<eggs::invoke_result<Fn, void*>>::value);
         CHECK(no_result<eggs::invoke_result<Fn, int, int>>::value);
 
+        struct Fnc
+        {
+            int operator()(int) const;
+        };
+
+        CHECK(std::is_same<eggs::invoke_result<Fnc&, int>::type, int>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fnc const&, int>::type, int>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fnc&&, int>::type, int>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fnc const&&, int>::type, int>::value);
+
+        struct Fnl
+        {
+            int operator()(int) &;
+        };
+
+        CHECK(std::is_same<eggs::invoke_result<Fnl&, int>::type, int>::value);
+        CHECK(no_result<eggs::invoke_result<Fnl const&, int>>::value);
+        CHECK(no_result<eggs::invoke_result<Fnl&&, int>>::value);
+        CHECK(no_result<eggs::invoke_result<Fnl const&&, int>>::value);
+
+        struct Fnr
+        {
+            int operator()(int) &&;
+        };
+
+        CHECK(no_result<eggs::invoke_result<Fnr&, int>>::value);
+        CHECK(no_result<eggs::invoke_result<Fnr const&, int>>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fnr&&, int>::type, int>::value);
+        CHECK(no_result<eggs::invoke_result<Fnr const&&, int>>::value);
+
+        struct Fncl
+        {
+            int operator()(int) const&;
+        };
+
+        CHECK(std::is_same<eggs::invoke_result<Fncl&, int>::type, int>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fncl const&, int>::type, int>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fncl&&, int>::type, int>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fncl const&&, int>::type, int>::value);
+
+        struct Fncr
+        {
+            int operator()(int) const&&;
+        };
+
+        CHECK(no_result<eggs::invoke_result<Fncr&, int>>::value);
+        CHECK(no_result<eggs::invoke_result<Fncr const&, int>>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fncr&&, int>::type, int>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fncr const&&, int>::type, int>::value);
+    }
+
+    /* fun-ptr */ {
         using Fn_ptr = int (*)(int);
 
         CHECK(std::is_same<eggs::invoke_result<Fn_ptr, int>::type, int>::value);
+        CHECK(std::is_same<eggs::invoke_result<Fn_ptr, conv_to<int>>::type, int>::value);
+
+        CHECK(no_result<eggs::invoke_result<Fn_ptr>>::value);
+        CHECK(no_result<eggs::invoke_result<Fn_ptr, int, int>>::value);
     }
 
     /* alias */ {

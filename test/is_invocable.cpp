@@ -218,36 +218,87 @@ int main()
         CHECK_SCOPE(test_not_invocable<Fn, C&, int>());
     }
 
-    /* fun-obj */ {
+    /* call-op */ {
         struct Fn
         {
-            int operator()(int) const noexcept
-            {
-                return 42;
-            }
+            int operator()(int) noexcept(p0012);
         };
 
-        CHECK_SCOPE(test_invocable<int, Fn, int>(nothrows));
-        CHECK_SCOPE(test_invocable<int, Fn, conv_to<int>>(nothrows));
-        CHECK_SCOPE(test_invocable<int, Fn, conv_to_throws<int>>(throws));
-        CHECK_SCOPE(test_invocable<conv_from<int>, Fn, int>(nothrows));
-        CHECK_SCOPE(test_invocable<conv_from_throws<int>, Fn, int>(nothrows, throws));
-        CHECK_SCOPE(test_invocable<conv_from_throws<int>, Fn, conv_to_throws<int>>(throws, throws));
+        CHECK_SCOPE(test_invocable<int, Fn&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fn const&, int>());
+        CHECK_SCOPE(test_invocable<int, Fn&&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fn const&&, int>());
 
         CHECK_SCOPE(test_not_invocable<Fn>());
         CHECK_SCOPE(test_not_invocable<Fn, void*>());
         CHECK_SCOPE(test_not_invocable<Fn, int, int>());
 
-        struct S
+        struct Fnc
         {
-            static int f(int) noexcept(p0012)
-            {
-                return 0;
-            }
+            int operator()(int) const noexcept(p0012);
         };
-        using Fn_ptr = decltype(&S::f);
+
+        CHECK_SCOPE(test_invocable<int, Fnc&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fnc const&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fnc&&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fnc const&&, int>(p0012_nothrows));
+
+        struct Fnl
+        {
+            int operator()(int) & noexcept(p0012);
+        };
+
+        CHECK_SCOPE(test_invocable<int, Fnl&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fnl const&, int>());
+        CHECK_SCOPE(test_not_invocable<Fnl&&, int>());
+        CHECK_SCOPE(test_not_invocable<Fnl const&&, int>());
+
+        struct Fnr
+        {
+            int operator()(int) && noexcept(p0012);
+        };
+
+        CHECK_SCOPE(test_not_invocable<Fnr&, int>());
+        CHECK_SCOPE(test_not_invocable<Fnr const&, int>());
+        CHECK_SCOPE(test_invocable<int, Fnr&&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_not_invocable<Fnr const&&, int>());
+
+        struct Fncl
+        {
+            int operator()(int) const& noexcept(p0012);
+        };
+
+        CHECK_SCOPE(test_invocable<int, Fncl&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fncl const&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fncl&&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fncl const&&, int>(p0012_nothrows));
+
+        struct Fncr
+        {
+            int operator()(int) const&& noexcept(p0012);
+        };
+
+        CHECK_SCOPE(test_not_invocable<Fncr&, int>());
+        CHECK_SCOPE(test_not_invocable<Fncr const&, int>());
+        CHECK_SCOPE(test_invocable<int, Fncr&&, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fncr const&&, int>(p0012_nothrows));
+    }
+
+    /* fun-ptr */ {
+        struct Fn
+        {
+            static int fun(int) noexcept(p0012);
+        };
+        using Fn_ptr = decltype(&Fn::fun);
 
         CHECK_SCOPE(test_invocable<int, Fn_ptr, int>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fn_ptr, conv_to<int>>(p0012_nothrows));
+        CHECK_SCOPE(test_invocable<int, Fn_ptr, conv_to_throws<int>>(throws));
+        CHECK_SCOPE(test_invocable<conv_from<int>, Fn_ptr, int>(p0012_nothrows, p0012_nothrows));
+        CHECK_SCOPE(test_invocable<conv_from_throws<int>, Fn_ptr, int>(p0012_nothrows, throws));
+
+        CHECK_SCOPE(test_not_invocable<int, Fn_ptr>());
+        CHECK_SCOPE(test_not_invocable<int, Fn_ptr, int, int>());
     }
 
     return test_report();

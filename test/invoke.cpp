@@ -91,11 +91,21 @@ template <typename T, bool IsNothrow = true>
 struct conv_to
 {
     T val;
-    constexpr conv_to(T val) : val(val) {}
     constexpr operator T() const noexcept(IsNothrow) { return val; }
+    constexpr bool operator==(conv_to const& other) const noexcept { return val == other.val; }
 };
 template <typename T>
 using conv_to_throws = conv_to<T, false>;
+
+template <typename T, bool IsNothrow = true>
+struct conv_from
+{
+    T val;
+    constexpr conv_from(T val) noexcept(IsNothrow) : val(val) {}
+    constexpr bool operator==(conv_from const& other) const noexcept { return val == other.val; }
+};
+template <typename T>
+using conv_from_throws = conv_from<T, false>;
 
 std::true_type const nothrows{};
 std::false_type const throws{};
@@ -471,27 +481,111 @@ void test_fun_obj()
     /* call-op */ {
         struct Fn
         {
-            constexpr int operator()(int base) const noexcept
+            constexpr14 int operator()(int base) noexcept
             {
-                return base + 6;
+                return base + 0;
             }
         };
-        constexpr auto f = Fn{};
+        auto f = Fn{};
+        constexpr auto cf = Fn{};
 
         CHECK_SCOPE(test_invoke_fun(f(40), nothrows, f, 40));
-        CHECK_CONSTEXPR(eggs::invoke(f, 40));
-        CHECK_SCOPE(test_invoke_fun(f(conv_to<int>(40)), nothrows, f, conv_to<int>(40)));
-        CHECK_CONSTEXPR(eggs::invoke(f, conv_to<int>(40)));
-        CHECK_SCOPE(test_invoke_fun(f(conv_to_throws<int>(40)), throws, f, conv_to_throws<int>(40)));
-        CHECK_CONSTEXPR(eggs::invoke(f, conv_to_throws<int>(40)));
-        CHECK_SCOPE(test_invoke_r_fun<conv_to_throws<int>>(f(40), nothrows, throws, f, 40));
-        CHECK_CONSTEXPR(eggs::invoke_r<conv_to_throws<int>>(f, 40));
-        CHECK_SCOPE(test_invoke_r_fun<conv_to_throws<int>>(f(40), throws, throws, f, conv_to_throws<int>(40)));
-        CHECK_CONSTEXPR(eggs::invoke_r<conv_to_throws<int>>(f, conv_to_throws<int>(40)));
+        CHECK_CONSTEXPR14(eggs::invoke(f, 40));
+        CHECK_SCOPE(test_not_invocable(cf, 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(f)(40), nothrows, std::move(f), 40));
+        CHECK_CONSTEXPR14(eggs::invoke(std::move(f), 40));
+        CHECK_SCOPE(test_not_invocable(std::move(cf), 40));
 
         CHECK_SCOPE(test_not_invocable(f));
         CHECK_SCOPE(test_not_invocable(f, 40, 41));
         CHECK_SCOPE(test_not_invocable_r<int*>(f, 40));
+
+        struct Fnc
+        {
+            constexpr int operator()(int base) const noexcept
+            {
+                return base + 1;
+            }
+        };
+        auto fc = Fnc{};
+        constexpr auto cfc = Fnc{};
+
+        CHECK_SCOPE(test_invoke_fun(fc(40), nothrows, fc, 40));
+        CHECK_CONSTEXPR(eggs::invoke(fc, 40));
+        CHECK_SCOPE(test_invoke_fun(cfc(40), nothrows, cfc, 40));
+        CHECK_CONSTEXPR(eggs::invoke(cfc, 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(fc)(40), nothrows, std::move(fc), 40));
+        CHECK_CONSTEXPR(eggs::invoke(std::move(fc), 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(cfc)(40), nothrows, std::move(cfc), 40));
+        CHECK_CONSTEXPR(eggs::invoke(std::move(cfc), 40));
+
+        struct Fnl
+        {
+            constexpr14 int operator()(int base) & noexcept
+            {
+                return base + 2;
+            }
+        };
+        auto fl = Fnl{};
+        constexpr auto cfl = Fnl{};
+
+        CHECK_SCOPE(test_invoke_fun(fl(40), nothrows, fl, 40));
+        CHECK_CONSTEXPR14(eggs::invoke(fl, 40));
+        CHECK_SCOPE(test_not_invocable(cfl, 40));
+        CHECK_SCOPE(test_not_invocable(std::move(fl), 40));
+        CHECK_SCOPE(test_not_invocable(std::move(cfl), 40));
+
+        struct Fnr
+        {
+            constexpr14 int operator()(int base) && noexcept
+            {
+                return base + 3;
+            }
+        };
+        auto fr = Fnr{};
+        constexpr auto cfr = Fnr{};
+
+        CHECK_SCOPE(test_not_invocable(fr, 40));
+        CHECK_SCOPE(test_not_invocable(cfr, 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(fr)(40), nothrows, std::move(fr), 40));
+        CHECK_CONSTEXPR14(eggs::invoke(std::move(fr), 40));
+        CHECK_SCOPE(test_not_invocable(std::move(cfr), 40));
+
+        struct Fncl
+        {
+            constexpr int operator()(int base) const& noexcept
+            {
+                return base + 4;
+            }
+        };
+        auto fcl = Fncl{};
+        constexpr auto cfcl = Fncl{};
+
+        CHECK_SCOPE(test_invoke_fun(fcl(40), nothrows, fcl, 40));
+        CHECK_CONSTEXPR(eggs::invoke(fcl, 40));
+        CHECK_SCOPE(test_invoke_fun(cfcl(40), nothrows, cfcl, 40));
+        CHECK_CONSTEXPR(eggs::invoke(cfcl, 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(fcl)(40), nothrows, std::move(fcl), 40));
+        CHECK_CONSTEXPR(eggs::invoke(std::move(fcl), 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(cfcl)(40), nothrows, std::move(cfcl), 40));
+        CHECK_CONSTEXPR(eggs::invoke(std::move(cfcl), 40));
+
+        struct Fncr
+        {
+            constexpr int operator()(int base) const&& noexcept
+            {
+                return base + 5;
+            }
+        };
+        auto fcr = Fncr{};
+        constexpr auto cfcr = Fncr{};
+
+        CHECK_SCOPE(test_not_invocable(fcr, 40));
+        CHECK_SCOPE(test_not_invocable(cfcr, 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(fcr)(40), nothrows, std::move(fcr), 40));
+        CHECK_CONSTEXPR(eggs::invoke(std::move(fcr), 40));
+        CHECK_SCOPE(test_invoke_fun(std::move(cfcr)(40), nothrows, std::move(cfcr), 40));
+        CHECK_CONSTEXPR(eggs::invoke(std::move(cfcr), 40));
     }
 
     /* fun-ptr */ {
@@ -499,13 +593,22 @@ void test_fun_obj()
         {
             static constexpr int f(int base) noexcept(p0012)
             {
-                return base + 7;
+                return base + 6;
             }
         };
         constexpr auto f = &S::f;
 
         CHECK_SCOPE(test_invoke_fun(f(40), p0012_nothrows, f, 40));
         CHECK_CONSTEXPR(eggs::invoke(f, 40));
+
+        CHECK_SCOPE(test_invoke_fun(f(conv_to<int>{40}), p0012_nothrows, f, conv_to<int>{40}));
+        CHECK_CONSTEXPR(eggs::invoke(f, conv_to<int>{40}));
+        CHECK_SCOPE(test_invoke_fun(f(conv_to_throws<int>{40}), throws, f, conv_to_throws<int>{40}));
+        CHECK_CONSTEXPR(eggs::invoke(f, conv_to_throws<int>{40}));
+        CHECK_SCOPE(test_invoke_r_fun<conv_from<int>>(f(40), p0012_nothrows, p0012_nothrows, f, 40));
+        CHECK_CONSTEXPR(eggs::invoke_r<conv_from<int>>(f, 40));
+        CHECK_SCOPE(test_invoke_r_fun<conv_from_throws<int>>(f(40), p0012_nothrows, throws, f, 40));
+        CHECK_CONSTEXPR(eggs::invoke_r<conv_from_throws<int>>(f, 40));
 
         CHECK_SCOPE(test_not_invocable(f));
         CHECK_SCOPE(test_not_invocable(f, 40, 41));
