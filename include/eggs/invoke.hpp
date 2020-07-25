@@ -123,7 +123,7 @@ namespace eggs { namespace detail
     using invoke = typename dispatch_invoke<F>::type;
 
 #define EGGS_INVOKE(F, ...)                                                    \
-    (::eggs::detail::invoke<decltype((F))>(F)(__VA_ARGS__))
+    (static_cast<::eggs::detail::invoke<decltype((F))>>(F)(__VA_ARGS__))
 
     // `INVOKE(f, t1, t2, ..., tN)` implicitly converted to `R`.
     template <typename R, typename RD = typename std::remove_cv<R>::type>
