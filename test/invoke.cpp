@@ -612,6 +612,7 @@ void test_fun_obj()
 
         CHECK_SCOPE(test_not_invocable(f));
         CHECK_SCOPE(test_not_invocable(f, 40, 41));
+        CHECK_SCOPE(test_not_invocable_r<void*>(f, 40));
     }
 }
 

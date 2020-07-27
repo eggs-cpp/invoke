@@ -126,42 +126,20 @@ namespace eggs { namespace detail
     (static_cast<::eggs::detail::invoke<decltype((F))>>(F)(__VA_ARGS__))
 
     // `INVOKE(f, t1, t2, ..., tN)` implicitly converted to `R`.
-    template <typename R, typename RD = typename std::remove_cv<R>::type>
-    struct invoke_r
-    {
-    private:
-        static R conversion(R) noexcept;
+    template <typename R>
+    R invoke_r_conv(R) noexcept;
 
-    public:
-        template <typename F, typename... Args>
-        static constexpr auto call(F&& f, Args&&... args)
-            noexcept(noexcept(conversion(
-                EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...))))
-         -> decltype(conversion(
-                EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...)))
-        {
-            return EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...);
-        }
-    };
+    template <typename R, typename F, typename... Ts>
+    auto invoke_r(std::false_type, F&& f, Ts&&... ts)
+     -> decltype(detail::invoke_r_conv<R>(EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(ts)...)));
 
     // `static_cast<void>(INVOKE(f, t1, t2, ..., tN))` if `R` is _cv_ `void`.
     template <typename R>
-    struct invoke_r<R, void>
-    {
-        template <typename F, typename... Args>
-        static constexpr auto call(F&& f, Args&&... args)
-            noexcept(noexcept(
-                EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...)))
-         -> decltype(static_cast<void>(
-                EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...)))
-        {
-            return static_cast<void>(
-                EGGS_INVOKE(EGGS_FWD(f), EGGS_FWD(args)...));
-        }
-    };
+    void invoke_r(std::true_type, ...);
 
 #define EGGS_INVOKE_R(R, F, ...)                                               \
-    (::eggs::detail::invoke_r<R>::call(F, __VA_ARGS__))
+    (static_cast<decltype(::eggs::detail::invoke_r<R>(                         \
+        std::is_void<R>{}, F, __VA_ARGS__))>(EGGS_INVOKE(F, __VA_ARGS__)))
 
 }}    // namespace eggs::detail
 

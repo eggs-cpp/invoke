@@ -299,6 +299,7 @@ int main()
 
         CHECK_SCOPE(test_not_invocable<int, Fn_ptr>());
         CHECK_SCOPE(test_not_invocable<int, Fn_ptr, int, int>());
+        CHECK_SCOPE(test_not_invocable<void*, Fn_ptr, int>());
     }
 
     return test_report();
