@@ -5,7 +5,7 @@
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.4...3.18)
 
 set(_benchmark_report YES)
 if (NOT CMAKE_GENERATOR MATCHES "Make|Ninja")
