@@ -1,6 +1,6 @@
 #if BENCHMARK == 2
 #include <functional>
-#elif BENCHMARK == 3
+#elif BENCHMARK == 3 || BENCHMARK == 4
 #include <eggs/invoke.hpp>
 #endif
 
@@ -19,6 +19,8 @@ static void benchmark()
     std::invoke(&mem<I>::fun, mem<I>{}, 0, 1, 2);
 #elif BENCHMARK == 3
     eggs::invoke(&mem<I>::fun, mem<I>{}, 0, 1, 2);
+#elif BENCHMARK == 4
+    eggs::invoke_r<int>(&mem<I>::fun, mem<I>{}, 0, 1, 2);
 #endif
 }
 
