@@ -1,0 +1,34 @@
+#include <eggs/invoke.hpp>
+#include <utility>
+
+template <int I>
+static int fun(...) { return I; }
+
+template <int I>
+struct callable {
+    template <typename ...Args>
+    auto operator()(Args&&... args) const
+        noexcept(noexcept(fun<I>(std::forward<Args>(args)...)))
+     -> decltype(fun<I>(std::forward<Args>(args)...))
+    {
+        return fun<I>(std::forward<Args>(args)...);
+    }
+};
+
+template <int I>
+static void benchmark()
+{
+#if BENCHMARK == 1
+    typename eggs::invoke_result<callable<I>, int, int, int>::type r; (void)r;
+#elif BENCHMARK == 2
+    typename eggs::is_invocable<callable<I>, int, int, int>::type r; (void)r;
+#elif BENCHMARK == 3
+    typename eggs::is_nothrow_invocable<callable<I>, int, int, int>::type r; (void)r;
+#elif BENCHMARK == 4
+    typename eggs::invoke_result<callable<I>, int, int, int>::type r1; (void)r1;
+    typename eggs::is_invocable<callable<I>, int, int, int>::type r2; (void)r2;
+    typename eggs::is_nothrow_invocable<callable<I>, int, int, int>::type r3; (void)r3;
+#endif
+}
+
+@BENCHMARK_INSTANTIATIONS@

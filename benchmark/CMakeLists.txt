@@ -142,3 +142,21 @@ foreach(_benchmark ${_benchmarks})
     add_dependencies(benchmark benchmark.${_benchmark}.report)
   endif()
 endforeach()
+
+
+  add_benchmark(benchmark.traits traits.cpp.in
+    INSTANTIATIONS ${BENCHMARK_INSTANTIATIONS}
+    REPORT_TEMPLATE template/report.html.in
+    OUTPUT reports/traits.html
+    CASES
+      1 "invoke_result"
+      2 "is_invocable"
+      3 "is_nothrow_invocable"
+      4 "(all)")
+  target_link_libraries(benchmark.traits Eggs::Invoke)
+  set_property(TARGET benchmark.traits PROPERTY FOLDER "benchmark")
+
+  add_dependencies(benchmark benchmark.traits)
+  if (_benchmark_report)
+    add_dependencies(benchmark benchmark.traits.report)
+  endif()

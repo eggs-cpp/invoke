@@ -162,6 +162,29 @@ namespace eggs { namespace detail
 #define EGGS_INVOKE(F, ...)                                                    \
     (static_cast<decltype(::eggs::detail::invoke(F, __VA_ARGS__))>(F)(__VA_ARGS__))
 
+    template <typename T, typename Enable = void>
+    struct invoke_traits
+    {
+        struct _result {};
+        using _invocable = std::false_type;
+        using _nothrow_invocable = std::false_type;
+    };
+
+    template <typename F, typename... Ts>
+    struct invoke_traits<F(Ts...), decltype((void)
+        EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>
+    {
+        struct _result
+        {
+            using type = decltype(
+                EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...));
+        };
+        using _invocable = std::true_type;
+        using _nothrow_invocable = std::integral_constant<bool, noexcept(
+            EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
     // `INVOKE(f, t1, t2, ..., tN)` implicitly converted to `R`.
     template <typename R, typename RD = typename std::remove_cv<R>::type>
     struct invoke_r
@@ -200,26 +223,27 @@ namespace eggs { namespace detail
 #define EGGS_INVOKE_R(R, F, ...)                                               \
     (::eggs::detail::invoke_r<R>::call(F, __VA_ARGS__))
 
+    template <typename R, typename T, typename Enable = void>
+    struct invoke_r_traits
+    {
+        using _invocable = std::false_type;
+        using _nothrow_invocable = std::false_type;
+    };
+
+    template <typename F, typename... Ts, typename R>
+    struct invoke_r_traits<R, F(Ts...), decltype((void)
+        EGGS_INVOKE_R(R, std::declval<F>(), std::declval<Ts>()...))>
+    {
+        using _invocable = std::true_type;
+        using _nothrow_invocable = std::integral_constant<bool, noexcept(
+            EGGS_INVOKE_R(R, std::declval<F>(), std::declval<Ts>()...))>;
+    };
+
 }}    // namespace eggs::detail
 
 namespace eggs
 {
     ///////////////////////////////////////////////////////////////////////////
-    namespace detail
-    {
-        template <typename T, typename Enable = void>
-        struct invoke_result_impl
-        {};
-
-        template <typename F, typename... Ts>
-        struct invoke_result_impl<F(Ts...), decltype((void)
-            EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>
-        {
-            using type = decltype(
-                EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...));
-        };
-    }    // namespace detail
-
     //! template <class Fn, class... ArgTypes> struct invoke_result;
     //!
     //! - _Comments_: If the expression `INVOKE(std::declval<Fn>(),
@@ -235,7 +259,7 @@ namespace eggs
     //!   bound.
     template <typename Fn, typename... ArgTypes>
     struct invoke_result
-      : detail::invoke_result_impl<Fn&&(ArgTypes&&...)>
+      : detail::invoke_traits<Fn&&(ArgTypes&&...)>::_result
     {};
 
     //! template <class Fn, class... ArgTypes>
@@ -245,20 +269,6 @@ namespace eggs
         typename invoke_result<Fn, ArgTypes...>::type;
 
     ///////////////////////////////////////////////////////////////////////////
-    namespace detail
-    {
-        template <typename T, typename Enable = void>
-        struct is_invocable_impl
-          : std::false_type
-        {};
-
-        template <typename F, typename... Ts>
-        struct is_invocable_impl<F(Ts...), decltype((void)
-            EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>
-          : std::true_type
-        {};
-    }
-
     //! template <class Fn, class... ArgTypes> struct is_invocable;
     //!
     //! - _Condition_: The expression `INVOKE(std::declval<Fn>(),
@@ -270,7 +280,7 @@ namespace eggs
     //!   unknown bound.
     template <typename Fn, typename... ArgTypes>
     struct is_invocable
-      : detail::is_invocable_impl<Fn&&(ArgTypes&&...)>::type
+      : detail::invoke_traits<Fn&&(ArgTypes&&...)>::_invocable
     {};
 
 #if __cpp_variable_templates
@@ -286,20 +296,6 @@ namespace eggs
 #endif
 
     ///////////////////////////////////////////////////////////////////////////
-    namespace detail
-    {
-        template <typename T, typename R, typename Enable = void>
-        struct is_invocable_r_impl
-          : std::false_type
-        {};
-
-        template <typename F, typename... Ts, typename R>
-        struct is_invocable_r_impl<F(Ts...), R, decltype((void)
-            EGGS_INVOKE_R(R, std::declval<F>(), std::declval<Ts>()...))>
-          : std::true_type
-        {};
-    }
-
     //! template <class R, class Fn, class... ArgTypes> struct is_invocable_r;
     //!
     //! - _Condition_: The expression `INVOKE<R>(std::declval<Fn>(),
@@ -311,7 +307,7 @@ namespace eggs
     //!   unknown bound.
     template <typename R, typename Fn, typename... ArgTypes>
     struct is_invocable_r
-      : detail::is_invocable_r_impl<Fn&&(ArgTypes&&...), R>::type
+      : detail::invoke_r_traits<R, Fn&&(ArgTypes&&...)>::_invocable
     {};
 
 #if __cpp_variable_templates
@@ -327,21 +323,6 @@ namespace eggs
 #endif
 
     ///////////////////////////////////////////////////////////////////////////
-    namespace detail
-    {
-        template <typename T, typename Enable = void>
-        struct is_nothrow_invocable_impl
-          : std::false_type
-        {};
-
-        template <typename F, typename... Ts>
-        struct is_nothrow_invocable_impl<F(Ts...), decltype((void)
-            EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>
-          : std::integral_constant<bool, noexcept(
-                EGGS_INVOKE(std::declval<F>(), std::declval<Ts>()...))>
-        {};
-    }
-
     //! template <class Fn, class... ArgTypes> struct is_nothrow_invocable;
     //!
     //! - _Condition_: `eggs::is_invocable_v<Fn, ArgTypes...>` is `true` and
@@ -353,7 +334,7 @@ namespace eggs
     //!   unknown bound.
     template <typename Fn, typename... ArgTypes>
     struct is_nothrow_invocable
-      : detail::is_nothrow_invocable_impl<Fn&&(ArgTypes&&...)>::type
+      : detail::invoke_traits<Fn&&(ArgTypes&&...)>::_nothrow_invocable
     {};
 
 #if __cpp_variable_templates
@@ -369,21 +350,6 @@ namespace eggs
 #endif
 
     ///////////////////////////////////////////////////////////////////////////
-    namespace detail
-    {
-        template <typename T, typename R, typename Enable = void>
-        struct is_nothrow_invocable_r_impl
-          : std::false_type
-        {};
-
-        template <typename F, typename... Ts, typename R>
-        struct is_nothrow_invocable_r_impl<F(Ts...), R, decltype((void)
-            EGGS_INVOKE_R(R, std::declval<F>(), std::declval<Ts>()...))>
-          : std::integral_constant<bool, noexcept(
-                EGGS_INVOKE_R(R, std::declval<F>(), std::declval<Ts>()...))>
-        {};
-    }
-
     //! template <class R, class Fn, class... ArgTypes> struct is_nothrow_invocable_r;
     //!
     //! - _Condition_: `eggs::is_invocable_r_v<R, Fn, ArgTypes...>` is `true`
@@ -395,7 +361,7 @@ namespace eggs
     //!   unknown bound.
     template <typename R, typename Fn, typename... ArgTypes>
     struct is_nothrow_invocable_r
-      : detail::is_nothrow_invocable_r_impl<Fn&&(ArgTypes&&...), R>::type
+      : detail::invoke_r_traits<R, Fn&&(ArgTypes&&...)>::_nothrow_invocable
     {};
 
 #if __cpp_variable_templates
