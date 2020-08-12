@@ -165,9 +165,21 @@ namespace eggs { namespace detail
             /*Ref=*/false,
             /*RefWrapper=*/true>;
 
+    //! EGGS_INVOKE(F, ...)
+    //!
+    //! - _Returns_: `INVOKE(F __VA_OPT__(,) __VA_ARGS__)`.
+#if __cplusplus > 201703L // C++20: P0306
+#define EGGS_INVOKE(F, ...)                                                    \
+    (static_cast<decltype(::eggs::detail::invoke(F __VA_OPT__(,) __VA_ARGS__))>(F)(__VA_ARGS__))
+#elif _MSVC_TRADITIONAL
 #define EGGS_INVOKE(F, ...)                                                    \
     (static_cast<decltype(::eggs::detail::invoke(F, __VA_ARGS__))>(F)(__VA_ARGS__))
+#else
+#define EGGS_INVOKE(F, ...)                                                    \
+    (static_cast<decltype(::eggs::detail::invoke(F, ##__VA_ARGS__))>(F)(__VA_ARGS__))
+#endif
 
+    ///////////////////////////////////////////////////////////////////////////
     // `INVOKE(f, t1, t2, ..., tN)` implicitly converted to `R`.
     template <typename R, typename RD = typename std::remove_cv<R>::type>
     struct invoke_r
@@ -203,8 +215,11 @@ namespace eggs { namespace detail
         }
     };
 
-#define EGGS_INVOKE_R(R, F, ...)                                               \
-    (::eggs::detail::invoke_r<R>::call(F, __VA_ARGS__))
+    //! EGGS_INVOKE(R, F, ...)
+    //!
+    //! - _Returns_: `INVOKE<R>(F __VA_OPT__(,) __VA_ARGS__)`.
+#define EGGS_INVOKE_R(R, ...)                                               \
+    (::eggs::detail::invoke_r<R>::call(__VA_ARGS__))
 
 }}    // namespace eggs::detail
 

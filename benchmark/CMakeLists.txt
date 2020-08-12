@@ -133,7 +133,8 @@ foreach(_benchmark ${_benchmarks})
     CASES
       1 "plain call"
       2 "std::invoke"
-      3 "eggs::invoke")
+      3 "eggs::invoke"
+      4 "EGGS_INVOKE")
   target_link_libraries(benchmark.${_benchmark} Eggs::Invoke)
   set_property(TARGET benchmark.${_benchmark} PROPERTY FOLDER "benchmark")
 

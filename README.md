@@ -163,6 +163,22 @@ inline constexpr bool is_nothrow_invocable_r_v =
     eggs::is_nothrow_invocable_r<R, Fn, ArgTypes...>::value;
 ```
 
+#### Function-like macro `EGGS_INVOKE`
+
+```cpp
+#define EGGS_INVOKE(F, ...) // (extension)
+```
+
+- _Returns_: `INVOKE(F __VA_OPT__(,) __VA_ARGS__)`.
+
+#### Function-like macro `EGGS_INVOKE_R`
+
+```cpp
+#define EGGS_INVOKE_R(R, F, ...) // (extension)
+```
+
+- _Returns_: `INVOKE<R>(F __VA_OPT__(,) __VA_ARGS__)`.
+
 ## CI Status ##
 
 - C++11: ![](https://github.com/eggs-cpp/invoke/workflows/Eggs.Invoke%20C++11/badge.svg?branch=master)

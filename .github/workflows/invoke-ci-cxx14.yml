@@ -54,7 +54,7 @@ jobs:
             os: windows-latest,
             generator: Visual Studio 16 2019,
             cc: "cl", cxx: "cl",
-            cxxflags: "-W4 -WX -permissive-"
+            cxxflags: "-W4 -WX -permissive- -Zc:preprocessor -wd5105"
           }
         - {
             name: "Windows MSVC 2019 (permissive)",

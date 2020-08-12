@@ -8,7 +8,8 @@
 set(_tests
   invoke
   invoke_result
-  is_invocable)
+  is_invocable
+  macro)
 foreach(_test ${_tests})
   set(_test_file ${_test}.cpp)
   string(REPLACE "/" "." _test ${_test})
