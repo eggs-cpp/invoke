@@ -20,7 +20,7 @@
 #define CHECK_CONSTEXPR14
 #endif
 
-#if __cplusplus >= 202002L
+#if __cplusplus >= 202002L && __cpp_lib_constexpr_functional >= 201907L
 #define constexpr20 constexpr
 #define CHECK_CONSTEXPR20 CHECK_CONSTEXPR
 #else
