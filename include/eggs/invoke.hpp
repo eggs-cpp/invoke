@@ -29,10 +29,11 @@ namespace eggs { namespace detail
     {
         T C::*pm;
 
-    public:
+#if !__cpp_aggregate_paren_init
         constexpr invoke_mem_ptr(T C::*pm) noexcept
           : pm(pm)
         {}
+#endif
 
         template <typename T1>
         constexpr auto operator()(T1&& t1) const
@@ -48,10 +49,11 @@ namespace eggs { namespace detail
     {
         T C::*pm;
 
-    public:
+#if !__cpp_aggregate_paren_init
         constexpr invoke_mem_ptr(T C::*pm) noexcept
           : pm(pm)
         {}
+#endif
 
         template <typename T1, typename... Tn>
         constexpr auto operator()(T1&& t1, Tn&&... tn) const
@@ -69,10 +71,11 @@ namespace eggs { namespace detail
     {
         T C::*pm;
 
-    public:
+#if !__cpp_aggregate_paren_init
         constexpr invoke_mem_ptr(T C::*pm) noexcept
           : pm(pm)
         {}
+#endif
 
         template <typename T1>
         constexpr auto operator()(T1&& t1) const
@@ -88,10 +91,11 @@ namespace eggs { namespace detail
     {
         T C::*pm;
 
-    public:
+#if !__cpp_aggregate_paren_init
         constexpr invoke_mem_ptr(T C::*pm) noexcept
           : pm(pm)
         {}
+#endif
 
         template <typename T1, typename... Tn>
         constexpr auto operator()(T1&& t1, Tn&&... tn) const
@@ -109,10 +113,11 @@ namespace eggs { namespace detail
     {
         T C::*pm;
 
-    public:
+#if !__cpp_aggregate_paren_init
         constexpr invoke_mem_ptr(T C::*pm) noexcept
           : pm(pm)
         {}
+#endif
 
         template <typename T1>
         constexpr auto operator()(T1&& t1) const
@@ -128,10 +133,11 @@ namespace eggs { namespace detail
     {
         T C::*pm;
 
-    public:
+#if !__cpp_aggregate_paren_init
         constexpr invoke_mem_ptr(T C::*pm) noexcept
           : pm(pm)
         {}
+#endif
 
         template <typename T1, typename... Tn>
         constexpr auto operator()(T1&& t1, Tn&&... tn) const
