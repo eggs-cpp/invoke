@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     pathlib.Path(args.target).parent.mkdir(parents=True, exist_ok=True)
     with open(args.target + '.json', 'w') as file:
-        json.dump({ 'aspects': aspects, 'values': reports }, file)
+        json.dump({ 'aspects': aspects, 'values': reports }, file, indent=2)
 
     with open(args.source, 'r') as file:
         source = file.read()

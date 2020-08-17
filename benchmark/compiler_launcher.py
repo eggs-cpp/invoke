@@ -10,6 +10,7 @@ import json
 import os
 import pathlib
 import re
+import statistics
 import subprocess
 import sys
 import time
@@ -57,69 +58,84 @@ if __name__ == '__main__':
         print(stdout)
         sys.exit(returncode)
 
-    # run compiler
-    start_time = time.time()
-    process = subprocess.Popen(args.cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        universal_newlines=True)
-    try:
-        stdout, stderr = process.communicate(input)
-    except:
-        process.kill()
-        raise
-    returncode = process.poll()
-    end_time = time.time()
+    info = []
+    while True:
+        # run compiler
+        start_time = time.time()
+        process = subprocess.Popen(args.cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True)
+        try:
+            stdout, stderr = process.communicate(input)
+        except:
+            process.kill()
+            raise
+        returncode = process.poll()
+        end_time = time.time()
 
-    print(stdout)
-    if returncode != 0:
-        sys.exit(returncode)
+        if returncode != 0:
+            sys.exit(returncode)
 
-    # extract information
-    compilation_time = end_time - start_time
-    memory_usage = '-'
-    object_size = os.path.getsize(args.object)
+        # extract information
+        compilation_time = end_time - start_time
+        memory_usage = '-'
+        object_size = os.path.getsize(args.object)
 
-    try:
-        import resource
-        rusage = resource.getrusage(resource.RUSAGE_CHILDREN)
-        compilation_time = rusage.ru_utime + rusage.ru_stime
-        memory_usage = rusage.ru_maxrss
-    except ImportError:
-        pass
+        try:
+            import resource
+            rusage = resource.getrusage(resource.RUSAGE_CHILDREN)
+            compilation_time = rusage.ru_utime + rusage.ru_stime
+            memory_usage = rusage.ru_maxrss
+        except ImportError:
+            pass
 
-    if args.compiler_id == 'GNU':
-        # TOTAL : <USER_TIME> <SYSTEM_TIME> <WALL_TIME> <MEMORY_USAGE> kB
-        m = re.search(
-            '^ TOTAL +: +([0-9.]+) +([0-9.]+) +([0-9.]+) +([0-9]+) kB$',
-            stdout,
-            re.MULTILINE)
-        if m:
-            user_time = float(m.group(1))
-            system_time = float(m.group(2))
-            compilation_time = user_time + system_time
-            wall_time = float(m.group(3))
-            memory_usage = int(m.group(4))
-    elif 'Clang' in args.compiler_id:
-        pos = stdout.find("Clang front-end time report")
-        if pos != -1:
-            # <USER_TIME> (100.0%) <SYSTEM_TIME> (100.0%) <COMPILATION_TIME> (100.0%) <WALL_TIME> (100.0%) Total
+        if args.compiler_id == 'GNU':
+            # TOTAL : <USER_TIME> <SYSTEM_TIME> <WALL_TIME> <MEMORY_USAGE> kB
             m = re.search(
-                '^ +([0-9.]+) +\\(100.0%\\) +([0-9.]+) +\\(100.0%\\) +([0-9.]+) +\\(100.0%\\) +([0-9.]+) +\\(100.0%\\) +Total$',
-                stdout[pos:], re.MULTILINE)
+                '^ TOTAL +: +([0-9.]+) +([0-9.]+) +([0-9.]+) +([0-9]+) kB$',
+                stdout,
+                re.MULTILINE)
             if m:
                 user_time = float(m.group(1))
                 system_time = float(m.group(2))
-                compilation_time = float(m.group(3))
-                wall_time = float(m.group(4))
-    elif args.compiler_id == 'MSVC':
-        # time(*\c1xx.dll)=<COMPILATION_TIME>s < <START> - <END> > BB [<SOURCE>]
-        # time(*\c2.dll)=<COMPILATION_TIME>s < <START> - <END> > BB [<SOURCE>]
-        compilation_time = 0.0
-        for m in re.finditer(
-            '^time\\(.*\\)=([0-9.]+)s',
-            stdout, re.MULTILINE):
-            compilation_time += float(m.group(1))
+                compilation_time = user_time + system_time
+                wall_time = float(m.group(3))
+                memory_usage = int(m.group(4))
+        elif 'Clang' in args.compiler_id:
+            pos = stdout.find("Clang front-end time report")
+            if pos != -1:
+                # <USER_TIME> (100.0%) <SYSTEM_TIME> (100.0%) <COMPILATION_TIME> (100.0%) <WALL_TIME> (100.0%) Total
+                m = re.search(
+                    '^ +([0-9.]+) +\\(100.0%\\) +([0-9.]+) +\\(100.0%\\) +([0-9.]+) +\\(100.0%\\) +([0-9.]+) +\\(100.0%\\) +Total$',
+                    stdout[pos:], re.MULTILINE)
+                if m:
+                    user_time = float(m.group(1))
+                    system_time = float(m.group(2))
+                    compilation_time = float(m.group(3))
+                    wall_time = float(m.group(4))
+        elif args.compiler_id == 'MSVC':
+            # time(*\c1xx.dll)=<COMPILATION_TIME>s < <START> - <END> > BB [<SOURCE>]
+            # time(*\c2.dll)=<COMPILATION_TIME>s < <START> - <END> > BB [<SOURCE>]
+            compilation_time = 0.0
+            for m in re.finditer(
+                '^time\\(.*\\)=([0-9.]+)s',
+                stdout, re.MULTILINE):
+                compilation_time += float(m.group(1))
+
+        info.append({
+            'compilation_time': compilation_time,
+            'memory_usage': memory_usage,
+            'object_size': object_size,
+        })
+        if (len(info) >= 3):
+            median = statistics.median([x['compilation_time'] for x in info])
+            print(f'compilation_time: {compilation_time} s, median: {median} s', flush=True)
+            if (abs(compilation_time - median) < 0.01 * median):
+                break
+        else:
+            print(f'compilation_time: {compilation_time} s, again...', flush=True)
+    print(stdout)
 
     # print report
     print(f'Benchmark: {target}/{benchmark}, {label}')
@@ -140,4 +156,4 @@ if __name__ == '__main__':
 
     pathlib.Path(args.target).parent.mkdir(parents=True, exist_ok=True)
     with open(args.object + '.benchmark.json', 'w') as file:
-        json.dump(report, file)
+        json.dump(report, file, indent=2)

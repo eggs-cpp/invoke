@@ -8,6 +8,7 @@ name: Eggs.Invoke Benchmark
 on:
   push:
     branches:
+      - '!benchmark'
     paths:
       - 'CMakeLists.txt'
       - 'benchmark/**'
