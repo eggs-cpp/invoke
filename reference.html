@@ -1,0 +1,391 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <!-- TITLE -->
+    <title>Eggs.Invoke</title>
+
+    <!-- DESCRIPTION -->
+    <meta name="description" content="">
+
+    <!-- CSS3 -->
+    <link rel="stylesheet" type="text/css" href="css/normalize.css?v=2.0" />
+    <link rel="stylesheet" type="text/css" href="css/main.css?v=2.0" />
+    <style>
+        :target {
+            background-color: #C9FBC9;
+        }
+
+        .pl-c {
+            color: green;
+        }
+
+        .pl-e {
+            color: #74531f;
+        }
+
+        .pl-k {
+            color: blue;
+        }
+
+        .pl-m {
+            color: #8a1bff;
+        }
+
+        .pl-t {
+            color: #2b91af;
+        }
+    </style>
+
+    <!-- FAVICON -->
+    <link rel="shortcut icon" href="css/img/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+    <div id="container">
+        <header id="head">
+            <div class="top">
+                <img src="logo.png" class="logo" />
+                <a href="http://eggs-cpp.github.io/invoke/">
+                    Eggs.Invoke
+                </a>
+            </div>
+            <div class="nav">
+                <a href="index.html"><img src="css/img/prev.png" alt="Prev"></a>
+                <a href="index.html"><img src="css/img/home.png" alt="Home"></a>
+            </div>
+        </header>
+        <div class="reference">
+            <section>
+                <a name='reference' href='#reference'>
+                    <h1>Reference</h1>
+                </a>
+                <pre class="code">
+<span class="pl-k">namespace</span>&nbsp;<span class="pl-e">eggs</span>&nbsp;{
+&nbsp;&nbsp;<span class="pl-c">//&nbsp;invoke</span>
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">F</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">Args</span>&gt;
+&nbsp;&nbsp;<span class="pl-k">constexpr</span>&nbsp;<a href="#invoke_result"><span class="pl-t">invoke_result_t</span></a>&lt;<span class="pl-t">F</span>,&nbsp;<span class="pl-t">Args</span>...&gt;&nbsp;<a href="#invoke"><span class="pl-e">invoke</span></a>(<span class="pl-t">F</span>&amp;&amp;&nbsp;<span style="color:gray;">f</span>,&nbsp;<span class="pl-t">Args</span>&amp;&amp;...&nbsp;<span class="pl-t">Args</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl-k">noexcept</span>(<a href="#is_nothrow_invocable"><span class="pl-e">is_nothrow_invocable_v</span></a>&lt;<span class="pl-t">F</span>,&nbsp;<span class="pl-t">Args</span>...&gt;);
+
+&nbsp;&nbsp;<span class="pl-c">//&nbsp;invoke_r</span>
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">R</span>,&nbsp;<span class="pl-k">class</span>&nbsp;<span class="pl-t">F</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">Args</span>&gt;&nbsp;<span class="pl-c">//&nbsp;(extension)</span>
+&nbsp;&nbsp;<span class="pl-k">constexpr</span>&nbsp;<span class="pl-t">R</span>&nbsp;<a href="#invoke_r"><span class="pl-m">INVOKE</span></a>(<span class="pl-t">F</span>&amp;&amp;&nbsp;<span style="color:gray;">f</span>,&nbsp;<span class="pl-t">Args</span>&amp;&amp;...&nbsp;<span style="color:gray;">args</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl-k">noexcept</span>(<a href="#is_nothrow_invocable_r"><span class="pl-e">is_nothrow_invocable_r_v</span></a>&lt;<span class="pl-t">R</span>,&nbsp;<span class="pl-t">F</span>,&nbsp;<span class="pl-t">Args</span>...&gt;);
+
+&nbsp;&nbsp;<span class="pl-c">//&nbsp;invoke_result</span>
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+&nbsp;&nbsp;<span class="pl-k">struct</span>&nbsp;<a href="#invoke_result"><span class="pl-t">invoke_result</span></a>;
+
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+&nbsp;&nbsp;<span class="pl-k">using</span>&nbsp;<a href="#invoke_result"><span class="pl-t">invoke_result_t</span></a>&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl-k">typename</span>&nbsp;<a href="#invoke_result"><span class="pl-t">invoke_result</span></a>&lt;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-t">ArgTypes</span>...&gt;::<span class="pl-t">type</span>;
+
+&nbsp;&nbsp;<span class="pl-c">//&nbsp;is_invocable</span>
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+&nbsp;&nbsp;<span class="pl-k">struct</span>&nbsp;<a href="#is_invocable"><span class="pl-t">is_invocable</span></a>;
+
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;&nbsp;<span class="pl-c">//&nbsp;(C++14)</span>
+&nbsp;&nbsp;<span class="pl-k">inline</span>&nbsp;<span class="pl-k">constexpr</span>&nbsp;<span class="pl-k">bool</span>&nbsp;<a href="#is_invocable"><span class="pl-e">is_invocable_v</span></a>&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#is_invocable"><span class="pl-t">is_invocable</span></a>&lt;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-t">ArgTypes</span>...&gt;::<span class="pl-e">value</span>;
+
+&nbsp;&nbsp;<span class="pl-c">//&nbsp;is_invocable_r</span>
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">R</span>,&nbsp;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+&nbsp;&nbsp;<span class="pl-k">struct</span>&nbsp;<a href="#is_invocable_r"><span class="pl-t">is_invocable_r</span></a>;
+
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">R</span>,&nbsp;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;&nbsp;<span class="pl-c">//&nbsp;(C++14)</span>
+&nbsp;&nbsp;<span class="pl-k">inline</span>&nbsp;<span class="pl-k">constexpr</span>&nbsp;<span class="pl-k">bool</span>&nbsp;<a href="#is_invocable_r"><span class="pl-e">is_invocable_r_v</span></a>&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#is_invocable_r"><span class="pl-t">is_invocable_r</span></a>&lt;<span class="pl-t">R</span>,&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-t">ArgTypes</span>...&gt;::<span class="pl-e">value</span>;
+
+&nbsp;&nbsp;<span class="pl-c">//&nbsp;is_nothrow_invocable</span>
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+&nbsp;&nbsp;<span class="pl-k">struct</span>&nbsp;<a href="#is_nothrow_invocable"><span class="pl-t">is_nothrow_invocable</span></a>;
+
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;&nbsp;<span class="pl-c">//&nbsp;(C++14)</span>
+&nbsp;&nbsp;<span class="pl-k">inline</span>&nbsp;<span class="pl-k">constexpr</span>&nbsp;<span class="pl-k">bool</span>&nbsp;<a href="#is_nothrow_invocable"><span class="pl-e">is_nothrow_invocable_v</span></a>&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#is_nothrow_invocable"><span class="pl-t">is_nothrow_invocable</span></a>&lt;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-t">ArgTypes</span>...&gt;::<span class="pl-e">value</span>;
+
+&nbsp;&nbsp;<span class="pl-c">//&nbsp;is_nothrow_invocable_r</span>
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">R</span>,&nbsp;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+&nbsp;&nbsp;<span class="pl-k">struct</span>&nbsp;<a href="#is_nothrow_invocable_r"><span class="pl-t">is_nothrow_invocable_r</span></a>;
+
+&nbsp;&nbsp;<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">R</span>,&nbsp;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;&nbsp;<span class="pl-c">//&nbsp;(C++14)</span>
+&nbsp;&nbsp;<span class="pl-k">inline</span>&nbsp;<span class="pl-k">constexpr</span>&nbsp;<span class="pl-k">bool</span>&nbsp;<a href="#is_nothrow_invocable_r"><span class="pl-e">is_nothrow_invocable_r_v</span></a>&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#is_nothrow_invocable_r"><span class="pl-t">is_nothrow_invocable_r</span></a>&lt;<span class="pl-t">R</span>,&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-t">ArgTypes</span>...&gt;::<span class="pl-e">value</span>;
+}
+
+<span style="color:gray;">#define</span>&nbsp;<a href="#eggs_invoke"><a href="#eggs_invoke"><span class="pl-m">EGGS_INVOKE</span></a></a>(<span class="pl-e">f</span>,&nbsp;...)&nbsp;<span class="pl-c">//&nbsp;(extension)</span>
+
+<span style="color:gray;">#define</span>&nbsp;<a href="#eggs_invoke_r"><a href="#eggs_invoke_r"><span class="pl-m">EGGS_INVOKE_R</span></a></a>(<span class="pl-t">R</span>,&nbsp;<span class="pl-e">f</span>,&nbsp;...)&nbsp;<span class="pl-c">//&nbsp;(extension)</span>
+</pre>
+            </section>
+
+            <section id="definitions">
+                <h1><a href="#definitions">Definitions</a></h1>
+                <p>Define <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>(f, t1, t2, ..., tN)</code> as follows:</p>
+                <ul>
+                    <li>
+                        <p>
+                            <code>(t1.*f)(t2, ..., tN)</code> when <code>f</code> is a pointer to a member function of a
+                            class <code>T</code> and <code><span class="pl-e">std</span>::<span class="pl-e">is_base_of_v</span>&lt;T, <span class="pl-e">std</span>::<span class="pl-t">remove_reference_t</span>&lt;<span class="pl-k">decltype</span>(t1)&gt;&gt;</code>
+                            is <code class="pl-k">true</code>;
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <code>(t1.get().*f)(t2, ..., tN)</code> when <code>f</code> is a pointer to a member function of a
+                            class <code>T</code> and <code><span class="pl-e">std</span>::<span class="pl-t">remove_cvref_t</span>&lt;<span class="pl-k">decltype</span>(t1)&gt;</code> is a specialization of
+                            <code><span class="pl-e">std</span>::<span class="pl-t">reference_wrapper</span></code>;
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <code>((*t1).*f)(t2, ..., tN)</code> when <code>f</code> is a pointer to a member function of a
+                            class <code>T</code> and <code>t1</code> does not satisfy the previous two items;
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <code>t1.*f</code> when <code>N == 1</code> and <code>f</code> is a pointer to data member of a class <code>T</code> and
+                            <code><span class="pl-e">std</span>::<span class="pl-e">is_base_of_v</span>&lt;T, <span class="pl-e">std</span>::<span class="pl-t">remove_reference_t</span>&lt;<span class="pl-k">decltype</span>(t1)&gt;&gt;</code> is <code class="pl-k">true</code>;
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <code>t1.get().*f</code> when <code>N == 1</code> and <code>f</code> is a pointer to data member of a class
+                            <code>T</code> and <code><span class="pl-e">std</span>::<span class="pl-t">remove_cvref_t</span>&lt;<span class="pl-k">decltype</span>(t1)&gt;</code> is a specialization of
+                            <code><span class="pl-e">std</span>::<span class="pl-t">reference_wrapper</span></code>;
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <code>(*t1).*f</code> when <code>N == 1</code> and <code>f</code> is a pointer to data member of a class <code>T</code>
+                            and <code>t1</code> does not satisfy the previous two items;
+                        </p>
+                    </li>
+                    <li>
+                        <p><code>f(t1, t2, ..., tN)</code> in all other cases.</p>
+                    </li>
+                </ul>
+                <p>
+                    Define <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>&lt;<span class="pl-t">R</span>&gt;(f, t1, t2, ..., tN)</code> as <code><span class="pl-k">static_cast</span>&lt;<span class="pl-k">void</span>&gt;(<a href="#definitions"><span class="pl-m">INVOKE</span></a>(f, t1, t2, ..., tN))</code> if <code><span class="pl-t">R</span></code> is <em>cv</em> <code class="pl-k">void</code>, otherwise <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>(f, t1, t2, ..., tN)</code>
+                    implicitly converted to <code><span class="pl-t">R</span></code>.
+                </p>
+            </section>
+
+            <section id="invoke">
+                <h1><a href="#invoke">Function template <code>invoke</code></a></h1>
+                <pre class="code">
+<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">F</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">Args</span>&gt;
+<span class="pl-k">constexpr</span>&nbsp;<a href="#invoke_result"><span class="pl-t">invoke_result_t</span></a>&lt;<span class="pl-t">F</span>,&nbsp;<span class="pl-t">Args</span>...&gt;&nbsp;<a href="#invoke"><span class="pl-e">invoke</span></a>(<span class="pl-t">F</span>&amp;&amp;&nbsp;<span style="color:gray;">f</span>,&nbsp;<span class="pl-t">Args</span>&amp;&amp;...&nbsp;<span style="color:gray;">args</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl-k">noexcept</span>(<a href="#is_nothrow_invocable"><span class="pl-e">is_nothrow_invocable_v</span></a>&lt;<span class="pl-t">F</span>,&nbsp;<span class="pl-t">Args</span>...&gt;);
+</pre>
+                <ul>
+                    <li>
+                        <p><em>Returns</em>: <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>(<span class="pl-e">std</span>::<span class="pl-e">forward</span>&lt;<span class="pl-t">F</span>&gt;(f), <span class="pl-e">std</span>::<span class="pl-e">forward</span>&lt;<span class="pl-t">Args</span>&gt;(args)...)</code>.</p>
+                    </li>
+                    <li>
+                        <p>
+                            <em>Remarks</em>: This function shall not participate in overload resolution unless
+                            <code><a href="#is_invocable"><span class="pl-e">is_invocable_v</span></a>&lt;<span class="pl-t">F</span>, <span class="pl-t">Args</span>...&gt;</code> is <code class="pl-k">true</code>.
+                        </p>
+                    </li>
+                </ul>
+            </section>
+
+            <section id="invoke_r">
+                <h1><a href="#invoke_r">Function template <code>invoke_r</code></a></h1>
+                <pre class="code">
+<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">R</span>,&nbsp;<span class="pl-k">class</span>&nbsp;<span class="pl-t">F</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">Args</span>&gt;&nbsp;<span class="pl-c">//&nbsp;(extension)</span>
+<span class="pl-k">constexpr</span>&nbsp;<span class="pl-t">R</span>&nbsp;<a href="#invoke_r"><span class="pl-m">INVOKE</span></a>(<span class="pl-t">F</span>&amp;&amp;&nbsp;<span style="color:gray;">f</span>,&nbsp;<span class="pl-t">Args</span>&amp;&amp;...&nbsp;<span style="color:gray;">args</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl-k">noexcept</span>(<a href="#is_nothrow_invocable_r"><span class="pl-e">is_nothrow_invocable_r_v</span></a>&lt;<span class="pl-t">R</span>,&nbsp;<span class="pl-t">F</span>,&nbsp;<span class="pl-t">Args</span>...&gt;);
+</pre>
+                <ul>
+                    <li>
+                        <p><em>Returns</em>: <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>&lt;<span class="pl-t">R</span>&gt;(<span class="pl-e">std</span>::<span class="pl-e">forward</span>&lt;<span class="pl-t">F</span>&gt;(f), <span class="pl-e">std</span>::<span class="pl-e">forward</span>&lt;<span class="pl-t">Args</span>&gt;(args)...)</code>.</p>
+                    </li>
+                    <li>
+                        <p>
+                            <em>Remarks</em>: This function shall not participate in overload resolution unless
+                            <code><a href="#is_invocable_r"><span class="pl-e">is_invocable_r_v</span></a>&lt;<span class="pl-t">R</span>, <span class="pl-t">F</span>, <span class="pl-t">Args</span>...&gt;</code> is <code class="pl-k">true</code>.
+                        </p>
+                    </li>
+                </ul>
+            </section>
+
+            <section id="invoke_result">
+                <h1><a href="#invoke_result">Transformation Trait <code>invoke_result</code></a></h1>
+                <pre class="code">
+<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+<span class="pl-k">struct</span>&nbsp;<a href="#invoke_result"><span class="pl-t">invoke_result</span></a>;
+</pre>
+                <ul>
+                    <li>
+                        <p>
+                            <em>Comments</em>: If the expression <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>(<span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">Fn</span>&gt;(), <span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">ArgTypes</span>&gt;()...)</code> is well-formed when treated as an unevaluated
+                            operand, the member typedef <code class="pl-t">type</code> names the type <code><span class="pl-k">decltype</span>(<a href="#definitions"><span class="pl-m">INVOKE</span></a>(<span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">Fn</span>&gt;(), <span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">ArgTypes</span>&gt;()...))</code>; otherwise, there shall be no member <code class="pl-t">type</code>.
+                            Access checking is performed as if in a context unrelated to <code><span class="pl-t">Fn</span></code> and
+                            <code><span class="pl-t">ArgTypes</span></code>. Only the validity of the immediate context of the expression is
+                            considered.
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <em>Preconditions</em>: <code><span class="pl-t">Fn</span></code> and all types in the template parameter pack <code><span class="pl-t">ArgTypes</span></code>
+                            are complete types, <em>cv</em> <code class="pl-k">void</code>, or arrays of unknown bound.
+                        </p>
+                    </li>
+                </ul>
+                <pre class="code">
+<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+<span class="pl-k">using</span>&nbsp;<a href="#invoke_result"><span class="pl-t">invoke_result_t</span></a>&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl-k">typename</span>&nbsp;<a href="#invoke_result"><span class="pl-t">invoke_result</span></a>&lt;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-t">ArgTypes</span>...&gt;::<span class="pl-t">type</span>;
+</pre>
+            </section>
+
+            <section id="is_invocable">
+                <h1><a href="#is_invocable">Unary Type Traits <code>is_invocable</code></a></h1>
+                <pre class="code">
+<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+<span class="pl-k">struct</span>&nbsp;<a href="#is_invocable"><span class="pl-t">is_invocable</span></a>;
+</pre>
+                <ul>
+                    <li>
+                        <p>
+                            <em>Condition</em>: The expression <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>(<span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">Fn</span>&gt;(), <span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">ArgTypes</span>&gt;()...)</code> is well-formed when treated as an unevaluated
+                            operand.
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <em>Comments</em>: <code><span class="pl-t">Fn</span></code> and all types in the template parameter pack <code><span class="pl-t">ArgTypes</span></code>
+                            shall be complete types, <em>cv</em> <code class="pl-k">void</code>, or arrays of unknown bound.
+                        </p>
+                    </li>
+                </ul>
+                <pre class="code">
+<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;&nbsp;<span class="pl-c">//&nbsp;(C++14)</span>
+<span class="pl-k">inline</span>&nbsp;<span class="pl-k">constexpr</span>&nbsp;<span class="pl-k">bool</span>&nbsp;<a href="#is_invocable"><span class="pl-e">is_invocable_v</span></a>&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#is_invocable"><span class="pl-t">is_invocable</span></a>&lt;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-t">ArgTypes</span>...&gt;::<span class="pl-e">value</span>;
+</pre>
+            </section>
+
+            <section id="is_invocable_r">
+                <h1><a href="#is_invocable_r">Unary Type Traits <code>is_invocable_r</code></a></h1>
+                <pre class="code">
+<span class="pl-c">//&nbsp;is_invocable_r</span>
+<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">R</span>,&nbsp;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+<span class="pl-k">struct</span>&nbsp;<a href="#is_invocable_r"><span class="pl-t">is_invocable_r</span></a>;
+</pre>
+                <ul>
+                    <li>
+                        <p>
+                            <em>Condition</em>: The expression <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>&lt;<span class="pl-t">R</span>&gt;(<span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">Fn</span>&gt;(), <span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">ArgTypes</span>&gt;()...)</code> is well-formed when treated as an unevaluated
+                            operand.
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <em>Comments</em>: <code><span class="pl-t">Fn</span></code>, <code><span class="pl-t">R</span></code>, and all types in the template parameter pack
+                            <code><span class="pl-t">ArgTypes</span></code> shall be complete types, <em>cv</em> <code class="pl-k">void</code>, or arrays of unknown bound.
+                        </p>
+                    </li>
+                </ul>
+                <pre class="code">
+<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">R</span>,&nbsp;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;&nbsp;<span class="pl-c">//&nbsp;(C++14)</span>
+<span class="pl-k">inline</span>&nbsp;<span class="pl-k">constexpr</span>&nbsp;<span class="pl-k">bool</span>&nbsp;<a href="#is_invocable_r"><span class="pl-e">is_invocable_r_v</span></a>&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#is_invocable_r"><span class="pl-t">is_invocable_r</span></a>&lt;<span class="pl-t">R</span>,&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-t">ArgTypes</span>...&gt;::<span class="pl-e">value</span>;
+</pre>
+            </section>
+
+            <section id="is_nothrow_invocable">
+                <h1><a href="#is_nothrow_invocable">Unary Type Traits <code>is_nothrow_invocable</code></a></h1>
+                <pre class="code">
+<span class="pl-c">//&nbsp;is_nothrow_invocable</span>
+<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+<span class="pl-k">struct</span>&nbsp;<a href="#is_nothrow_invocable"><span class="pl-t">is_nothrow_invocable</span></a>;
+</pre>
+                <ul>
+                    <li>
+                        <p>
+                            <em>Condition</em>: <code><a href="#is_invocable"><span class="pl-e">is_invocable_v</span></a>&lt;<span class="pl-t">Fn</span>, <span class="pl-t">ArgTypes</span>...&gt;</code> is <code class="pl-k">true</code> and the
+                            expression <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>(<span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">Fn</span>&gt;(), <span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">ArgTypes</span>&gt;()...)</code> is
+                            known not to throw any exceptions.
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <em>Comments</em>: <code><span class="pl-t">Fn</span></code> and all types in the template parameter pack <code><span class="pl-t">ArgTypes</span></code>
+                            shall be complete types, <em>cv</em> <code class="pl-k">void</code>, or arrays of unknown bound.
+                        </p>
+                    </li>
+                </ul>
+                <pre class="code"><span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;&nbsp;<span class="pl-c">//&nbsp;(C++14)</span>
+<span class="pl-k">inline</span>&nbsp;<span class="pl-k">constexpr</span>&nbsp;<span class="pl-k">bool</span>&nbsp;<a href="#is_nothrow_invocable"><span class="pl-e">is_nothrow_invocable_v</span></a>&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#is_nothrow_invocable"><span class="pl-t">is_nothrow_invocable</span></a>&lt;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-t">ArgTypes</span>...&gt;::<span class="pl-e">value</span>;
+</pre>
+            </section>
+
+            <section id="is_nothrow_invocable_r">
+                <h1><a href="#is_nothrow_invocable_r">Unary Type Traits <code>is_nothrow_invocable_r</code></a></h1>
+                <pre class="code">
+<span class="pl-c">//&nbsp;is_nothrow_invocable_r</span>
+<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">R</span>,&nbsp;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;
+<span class="pl-k">struct</span>&nbsp;<a href="#is_nothrow_invocable_r"><span class="pl-t">is_nothrow_invocable_r</span></a>;
+</pre>
+                <ul>
+                    <li>
+                        <p>
+                            <em>Condition</em>: <code><a href="#is_invocable_r"><span class="pl-e">is_invocable_r_v</span></a>&lt;<span class="pl-t">R</span>, <span class="pl-t">Fn</span>, <span class="pl-t">ArgTypes</span>...&gt;</code> is <code class="pl-k">true</code> and the
+                            expression <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>&lt;<span class="pl-t">R</span>&gt;(<span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">Fn</span>&gt;(), <span class="pl-e">std</span>::<span class="pl-e">declval</span>&lt;<span class="pl-t">ArgTypes</span>&gt;()...)</code> is
+                            known not to throw any exceptions.
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <em>Comments</em>: <code><span class="pl-t">Fn</span></code>, <code><span class="pl-t">R</span></code>, and all types in the template parameter pack
+                            <code><span class="pl-t">ArgTypes</span></code> shall be complete types, <em>cv</em> <code class="pl-k">void</code>, or arrays of unknown bound.
+                        </p>
+                    </li>
+                </ul>
+                <pre class="code">
+<span class="pl-k">template</span>&nbsp;&lt;<span class="pl-k">class</span>&nbsp;<span class="pl-t">R</span>,&nbsp;<span class="pl-k">class</span>&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-k">class</span>...&nbsp;<span class="pl-t">ArgTypes</span>&gt;&nbsp;<span class="pl-c">//&nbsp;(C++14)</span>
+<span class="pl-k">inline</span>&nbsp;<span class="pl-k">constexpr</span>&nbsp;<span class="pl-k">bool</span>&nbsp;<a href="#is_nothrow_invocable_r"><span class="pl-e">is_nothrow_invocable_r_v</span></a>&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#is_nothrow_invocable_r"><span class="pl-t">is_nothrow_invocable_r</span></a>&lt;<span class="pl-t">R</span>,&nbsp;<span class="pl-t">Fn</span>,&nbsp;<span class="pl-t">ArgTypes</span>...&gt;::<span class="pl-e">value</span>;
+</pre>
+            </section>
+
+            <section id="eggs_invoke">
+                <h1><a href="#eggs_invoke">Function-like macro <code>EGGS_INVOKE</code></a></h1>
+                <pre class="code">
+#<span class="pl-k">define</span> <a href="#eggs_invoke"><span class="pl-m">EGGS_INVOKE</span></a>(<span class="pl-e">f</span>, ...) <span class="pl-c"><span class="pl-c">//</span> (extension)</span>
+</pre>
+                <ul>
+                    <li><em>Returns</em>: <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>(<span class="pl-e">f</span> <span class="pl-m">__VA_OPT__</span>(,) <span class="pl-e">__VA_ARGS__</span>)</code>.</li>
+                </ul>
+            </section>
+
+            <section id="eggs_invoke_r">
+                <h1><a href="#eggs_invoke_r">Function-like macro <code>EGGS_INVOKE_R</code></a></h1>
+                <pre class="code">
+#<span class="pl-k">define</span> <a href="#eggs_invoke_r"><span class="pl-m">EGGS_INVOKE_R</span></a>(<span class="pl-t">R</span>, <span class="pl-e">f</span>, ...) <span class="pl-c"><span class="pl-c">//</span> (extension)</span>
+</pre>
+                <ul>
+                    <li><em>Returns</em>: <code><a href="#definitions"><span class="pl-m">INVOKE</span></a>&lt;<span class="pl-t">R</span>&gt;(<span class="pl-e">f</span> <span class="pl-m">__VA_OPT__</span>(,) <span class="pl-e">__VA_ARGS__</span>)</code>.</li>
+                </ul>
+            </section>
+        </div>
+
+        <hr>
+        <p>
+            Copyright
+            <em>Agust&iacute;n Berg&eacute;</em>,
+            <em>Fusion Fenix</em> 2017-2020
+        </p>
+
+        <p>
+            Distributed under the Boost Software License, Version 1.0. (See accompanying
+            file LICENSE.txt or copy at <a href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</a>)
+        </p>
+    </div>
+</body>
+</html>
