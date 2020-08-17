@@ -4,7 +4,8 @@
 ## Introduction ##
 
 **Eggs.Invoke** is a **C++11/14/17/20** single-header implementation of
-`INVOKE` and its related facilities.
+`INVOKE` and its related facilities. See the documentation at
+http://eggs-cpp.github.io/invoke/.
 
 ## Reference ##
 
