@@ -8,6 +8,7 @@ import argparse
 import html
 import json
 import os
+import pathlib
 import re
 
 # ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_report.py
@@ -65,6 +66,7 @@ if __name__ == '__main__':
     aspects = [compilation_time, memory_usage, object_size]
     ASPECTS = json.dumps(aspects, indent=2)
 
+    pathlib.Path(args.target).parent.mkdir(parents=True, exist_ok=True)
     with open(args.target + '.json', 'w') as file:
         json.dump({ 'aspects': aspects, 'values': reports }, file)
 
@@ -84,5 +86,7 @@ if __name__ == '__main__':
     with open(args.template, 'r') as file:
         template = file.read()
     output = re.sub(r'@(.*)@', lambda m: str(eval(m.group(1))), template)
+
+    pathlib.Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, 'w') as file:
         file.write(output)

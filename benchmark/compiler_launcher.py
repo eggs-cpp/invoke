@@ -8,6 +8,7 @@
 import argparse
 import json
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -136,5 +137,7 @@ if __name__ == '__main__':
         'memory_usage': memory_usage * 1024 if memory_usage != '-' else '-',
         'object_size': object_size,
     }
+
+    pathlib.Path(args.target).parent.mkdir(parents=True, exist_ok=True)
     with open(args.object + '.benchmark.json', 'w') as file:
         json.dump(report, file)
