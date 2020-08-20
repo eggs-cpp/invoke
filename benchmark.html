@@ -1,0 +1,377 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <!-- TITLE -->
+    <title>Eggs.Invoke</title>
+
+    <!-- DESCRIPTION -->
+    <meta name="description" content="">
+
+    <!-- CSS3 -->
+    <link rel="stylesheet" type="text/css" href="css/normalize.css?v=2.0" />
+    <link rel="stylesheet" type="text/css" href="css/main.css?v=2.0" />
+    <link rel="stylesheet" type="text/css" href="css/nv.d3.min.css" />
+    <style>
+        td {
+            text-align: right;
+        }
+    </style>
+
+    <!-- JS -->
+    <script src="js/jsrender.min.js"></script>
+    <script src="js/d3.min.js"></script>
+    <script src="js/nv.d3.min.js"></script>
+
+    <!-- FAVICON -->
+    <link rel="shortcut icon" href="css/img/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+
+    <script>
+        var gcc_debug = {
+            name: 'GCC-10, Debug',
+            compiler: 'gcc-10',
+            build_flags: '-std=c++17 -g',
+            instantiations: 10000,
+            headers: ['Compilation Time [s]', 'Memory Usage [Total] [Mb]', 'Object Size [Mb]'],
+            benchmarks: [
+                { "benchmark": "function", "godbolt": "https://godbolt.org/z/vK3qed", "baseline": { "case": "plain call", "compilation_time": 9.04, "memory_usage": 861.8134765625, "object_size": 4.633209228515625 }, "values": [{ "case": "std::invoke", "compilation_time": 12.89, "memory_usage": 1079.109375, "object_size": 5.887092590332031 }, { "case": "eggs::invoke", "compilation_time": 12.91, "memory_usage": 1086.947265625, "object_size": 5.88226318359375 }, { "case": "EGGS_INVOKE", "compilation_time": 12.18, "memory_usage": 1022.171875, "object_size": 5.4038848876953125 }] },
+                { "benchmark": "member_object", "godbolt": "https://godbolt.org/z/G199fz", "baseline": { "case": "plain call", "compilation_time": 6.27, "memory_usage": 583.4462890625, "object_size": 2.9381637573242188 }, "values": [{ "case": "std::invoke", "compilation_time": 84.64000000000001, "memory_usage": 6890.08203125, "object_size": 66.5438461303711 }, { "case": "eggs::invoke", "compilation_time": 28.52, "memory_usage": 2302.0009765625, "object_size": 27.93981170654297 }, { "case": "EGGS_INVOKE", "compilation_time": 18.96, "memory_usage": 1567.7109375, "object_size": 15.718894958496094 }] },
+                { "benchmark": "member_function", "godbolt": "https://godbolt.org/z/W6sjo6", "baseline": { "case": "plain call", "compilation_time": 13.330000000000002, "memory_usage": 1100.818359375, "object_size": 11.145195007324219 }, "values": [{ "case": "std::invoke", "compilation_time": 107.78999999999999, "memory_usage": 8486.919921875, "object_size": 84.6900405883789 }, { "case": "eggs::invoke", "compilation_time": 45.3, "memory_usage": 3705.0947265625, "object_size": 40.85917663574219 }, { "case": "EGGS_INVOKE", "compilation_time": 33.38, "memory_usage": 2689.26953125, "object_size": 26.79753875732422 }] },
+                { "benchmark": "callable", "godbolt": "https://godbolt.org/z/46xGK3", "baseline": { "case": "plain call", "compilation_time": 24.049999999999997, "memory_usage": 1896.578125, "object_size": 18.52368927001953 }, "values": [{ "case": "std::invoke", "compilation_time": 85.1, "memory_usage": 6942.900390625, "object_size": 69.2190170288086 }, { "case": "eggs::invoke", "compilation_time": 33.15, "memory_usage": 2852.4267578125, "object_size": 30.751686096191406 }, { "case": "EGGS_INVOKE", "compilation_time": 25.020000000000003, "memory_usage": 2009.5478515625, "object_size": 18.472434997558594 }] }
+            ]
+        };
+        var clang_libstdcxx_debug = {
+            name: 'Clang-10, libstdc++, Debug',
+            compiler: 'clang-10',
+            build_flags: '-std=c++17 -stdlib=libstdc++ -g',
+            instantiations: 10000,
+            headers: ['Compilation Time [s]', 'Memory Usage [Max] [Mb]', 'Object Size [Mb]'],
+            benchmarks: [
+                { "benchmark": "function", "godbolt": "https://godbolt.org/z/TP8rrW", "baseline": { "case": "plain call", "compilation_time": 7.7739, "memory_usage": 254.15234375, "object_size": 5.943885803222656 }, "values": [{ "case": "std::invoke", "compilation_time": 8.9153, "memory_usage": 320.5703125, "object_size": 7.005088806152344 }, { "case": "eggs::invoke", "compilation_time": 8.8824, "memory_usage": 319.30078125, "object_size": 7.0004425048828125 }, { "case": "EGGS_INVOKE", "compilation_time": 8.7795, "memory_usage": 295.88671875, "object_size": 6.3314056396484375 }] },
+                { "benchmark": "member_object", "godbolt": "https://godbolt.org/z/o7nqWs", "baseline": { "case": "plain call", "compilation_time": 3.9133, "memory_usage": 220.36328125, "object_size": 3.0046157836914062 }, "values": [{ "case": "std::invoke", "compilation_time": 58.1742, "memory_usage": 2606.88671875, "object_size": 60.762664794921875 }, { "case": "eggs::invoke", "compilation_time": 29.4888, "memory_usage": 1021.9140625, "object_size": 34.024436950683594 }, { "case": "EGGS_INVOKE", "compilation_time": 20.4416, "memory_usage": 765.765625, "object_size": 23.375930786132812 }] },
+                { "benchmark": "member_function", "godbolt": "https://godbolt.org/z/rohEhf", "baseline": { "case": "plain call", "compilation_time": 10.9555, "memory_usage": 392.19921875, "object_size": 11.062065124511719 }, "values": [{ "case": "std::invoke", "compilation_time": 70.8059, "memory_usage": 3296.3203125, "object_size": 76.23523712158203 }, { "case": "eggs::invoke", "compilation_time": 40.5211, "memory_usage": 1418.92578125, "object_size": 46.706214904785156 }, { "case": "EGGS_INVOKE", "compilation_time": 30.8924, "memory_usage": 1057.60546875, "object_size": 34.178985595703125 }] },
+                { "benchmark": "callable", "godbolt": "https://godbolt.org/z/c3er58", "baseline": { "case": "plain call", "compilation_time": 18.0114, "memory_usage": 742.953125, "object_size": 19.522117614746094 }, "values": [{ "case": "std::invoke", "compilation_time": 58.2602, "memory_usage": 2847.671875, "object_size": 65.18511962890625 }, { "case": "eggs::invoke", "compilation_time": 25.6167, "memory_usage": 1060.1796875, "object_size": 30.778152465820312 }, { "case": "EGGS_INVOKE", "compilation_time": 18.3161, "memory_usage": 756.80859375, "object_size": 19.45154571533203 }] }
+            ]
+        };
+        var clang_libcxx_debug = {
+            name: 'Clang-10, libc++, Debug',
+            compiler: 'clang-10',
+            build_flags: '-std=c++17 -stdlib=libc++ -g',
+            instantiations: 10000,
+            headers: ['Compilation Time [s]', 'Memory Usage [Max] [Mb]', 'Object Size [Mb]'],
+            benchmarks: [
+                { "benchmark": "function", "godbolt": "https://godbolt.org/z/GTdsnx", "baseline": { "case": "plain call", "compilation_time": 7.609, "memory_usage": 254.66796875, "object_size": 5.943901062011719 }, "values": [{ "case": "std::invoke", "compilation_time": 8.636, "memory_usage": 313.99609375, "object_size": 7.0050811767578125 }, { "case": "eggs::invoke", "compilation_time": 8.6994, "memory_usage": 312.9453125, "object_size": 7.002098083496094 }, { "case": "EGGS_INVOKE", "compilation_time": 8.4303, "memory_usage": 289.01953125, "object_size": 6.333045959472656 }] },
+                { "benchmark": "member_object", "godbolt": "https://godbolt.org/z/GYxxE5", "baseline": { "case": "plain call", "compilation_time": 3.8619, "memory_usage": 220.2265625, "object_size": 3.0046234130859375 }, "values": [{ "case": "std::invoke", "compilation_time": 47.5061, "memory_usage": 2458.125, "object_size": 39.14099884033203 }, { "case": "eggs::invoke", "compilation_time": 30.5037, "memory_usage": 1017.3671875, "object_size": 34.026145935058594 }, { "case": "EGGS_INVOKE", "compilation_time": 21.7184, "memory_usage": 758.84765625, "object_size": 23.377647399902344 }] },
+                { "benchmark": "member_function", "godbolt": "https://godbolt.org/z/fv7GPe", "baseline": { "case": "plain call", "compilation_time": 10.8139, "memory_usage": 392.17578125, "object_size": 11.062080383300781 }, "values": [{ "case": "std::invoke", "compilation_time": 60.3777, "memory_usage": 3082.6015625, "object_size": 53.559173583984375 }, { "case": "eggs::invoke", "compilation_time": 39.2457, "memory_usage": 1410.58203125, "object_size": 46.707923889160156 }, { "case": "EGGS_INVOKE", "compilation_time": 29.7086, "memory_usage": 1050.3515625, "object_size": 34.180702209472656 }] },
+                { "benchmark": "callable", "godbolt": "https://godbolt.org/z/bfEWos", "baseline": { "case": "plain call", "compilation_time": 17.7024, "memory_usage": 741.4921875, "object_size": 19.54540252685547 }, "values": [{ "case": "std::invoke", "compilation_time": 49.4109, "memory_usage": 2444.3203125, "object_size": 52.02995300292969 }, { "case": "eggs::invoke", "compilation_time": 24.6428, "memory_usage": 1052.1953125, "object_size": 30.77967071533203 }, { "case": "EGGS_INVOKE", "compilation_time": 17.7956, "memory_usage": 752.30859375, "object_size": 19.453109741210938 }] }
+            ]
+        };
+        var msvc_debug = {
+            name: 'MSVC-19.27, Debug',
+            compiler: 'msvc-19.27',
+            build_flags: '/std:c++17 /permissive- /MDd /Zi /Ob0 /Od /RTC1',
+            instantiations: 10000,
+            headers: ['Compilation Time [s]', 'Memory Usage [N/A]', 'Object Size [Mb]'],
+            benchmarks: [
+                { "benchmark": "function", "baseline": { "case": "plain call", "compilation_time": 3.94688, "memory_usage": NaN, "object_size": 6.255970001220703 }, "values": [{ "case": "std::invoke", "compilation_time": 4.47783, "memory_usage": NaN, "object_size": 6.986368179321289 }, { "case": "eggs::invoke", "compilation_time": 4.49529, "memory_usage": NaN, "object_size": 6.986441612243652 }, { "case": "EGGS_INVOKE", "compilation_time": 4.6892, "memory_usage": NaN, "object_size": 7.176425933837891 }] },
+                { "benchmark": "member_object", "baseline": { "case": "plain call", "compilation_time": 1.21569, "memory_usage": NaN, "object_size": 3.5316152572631836 }, "values": [{ "case": "std::invoke", "compilation_time": 10.97929, "memory_usage": NaN, "object_size": 10.446900367736816 }, { "case": "eggs::invoke", "compilation_time": 10.42024, "memory_usage": NaN, "object_size": 23.91032600402832 }, { "case": "EGGS_INVOKE", "compilation_time": 6.62326, "memory_usage": NaN, "object_size": 17.685473442077637 }] },
+                { "benchmark": "member_function", "baseline": { "case": "plain call", "compilation_time": 1.66417, "memory_usage": NaN, "object_size": 8.511371612548828 }, "values": [{ "case": "std::invoke", "compilation_time": 11.32606, "memory_usage": NaN, "object_size": 17.052475929260254 }, { "case": "eggs::invoke", "compilation_time": 13.89029, "memory_usage": NaN, "object_size": 32.61899757385254 }, { "case": "EGGS_INVOKE", "compilation_time": 8.82887, "memory_usage": NaN, "object_size": 25.150917053222656 }] },
+                { "benchmark": "callable", "baseline": { "case": "plain call", "compilation_time": 9.00296, "memory_usage": NaN, "object_size": 14.327058792114258 }, "values": [{ "case": "std::invoke", "compilation_time": 18.38493, "memory_usage": NaN, "object_size": 20.863353729248047 }, { "case": "eggs::invoke", "compilation_time": 16.41486, "memory_usage": NaN, "object_size": 20.835166931152344 }, { "case": "EGGS_INVOKE", "compilation_time": 10.04044, "memory_usage": NaN, "object_size": 14.348962783813477 }] }
+            ]
+        };
+
+        function generateGraphDatum(baseline, values) {
+            var compilation_time = [];
+            var memory_usage = [];
+            var object_size = [];
+            for (var i = 0; i < values.length; i++) {
+                var row = values[i];
+                var label = row.case;
+                compilation_time.push({ x: label, y: row.compilation_time / baseline.compilation_time - 1 });
+                memory_usage.push({ x: label, y: row.memory_usage / baseline.memory_usage - 1 });
+                object_size.push({ x: label, y: row.object_size / baseline.object_size - 1 });
+            }
+            var datum = [
+                { key: "Compilation Time", color: '#1f77b4', values: compilation_time },
+                { key: "Memory Usage", color: '#aec7e8', values: memory_usage },
+                { key: "Object Size", color: '#ff7f0e', values: object_size }
+            ];
+            if (!baseline.memory_usage)
+                datum.splice(1, 1);
+            return datum;
+        }
+
+        function displayGraph(selector, baseline, values) {
+            nv.addGraph(function () {
+                var chart = nv.models.multiBarChart()
+                    .reduceXTicks(true)
+                    .rotateLabels(0)
+                    .showControls(false)
+                    .groupSpacing(0.1)
+                    ;
+
+                chart.yAxis
+                    .tickFormat(d3.format(',.2f'));
+
+                var datum = generateGraphDatum(baseline, values);
+                d3.select(selector)
+                    .datum(datum)
+                    .call(chart);
+                return chart;
+            });
+        }
+    </script>
+
+    <div id="container">
+        <header id="head">
+            <div class="top">
+                <img src="logo.png" class="logo" />
+                <a href="http://eggs-cpp.github.io/invoke/">
+                    Eggs.Invoke
+                </a>
+            </div>
+            <div class="nav">
+                <a href="index.html"><img src="css/img/prev.png" alt="Prev"></a>
+                <a href="index.html"><img src="css/img/home.png" alt="Home"></a>
+                <a href="reference.html"><img src="css/img/next.png" alt="Next"></a>
+            </div>
+        </header>
+
+        <div class="short">
+            <p>These benchmarks measure the build overhead (compilation time, memory usage, object size) introduced by the use of different implementations of the <code>INVOKE</code> abstraction.</p>
+        </div>
+
+        <div class="contents">
+            <h3>function <small>(see <a href="https://github.com/eggs-cpp/invoke/blob/benchmark/benchmark/function.cpp.in">Source Code</a>)</small></h3>
+                <pre class="code">
+template &lt;int I&gt;
+int fun(...) { return I; }
+</pre>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Case</th>
+                        <th>Pattern</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>plain call</td>
+                        <td><code>(&amp;fun&lt;I&gt;)(1, 2, 3)</code></td>
+                    </tr>
+                    <tr>
+                        <td>std::invoke</td>
+                        <td><code>std::invoke(&amp;fun&lt;I&gt;, 1, 2, 3)</code></td>
+                    </tr>
+                    <tr>
+                        <td>eggs::invoke</td>
+                        <td><code>eggs::invoke(&amp;fun&lt;I&gt;, 1, 2, 3)</code></td>
+                    </tr>
+                    <tr>
+                        <td>EGGS_INVOKE</td>
+                        <td><code>EGGS_INVOKE(&amp;fun&lt;I&gt;, 1, 2, 3)</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>member_object <small>(see <a href="https://github.com/eggs-cpp/invoke/blob/benchmark/benchmark/member_object.cpp.in">Source Code</a>)</small></h3>
+            <pre class="code">template &lt;int I&gt;
+struct mem
+{
+    int obj;
+};
+</pre>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Case</th>
+                        <th>Pattern</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>plain call</td>
+                        <td><code>mem&lt;I&gt;{}.*(&amp;mem&lt;I&gt;::obj)</code></td>
+                    </tr>
+                    <tr>
+                        <td>std::invoke</td>
+                        <td><code>std::invoke(&amp;mem&lt;I&gt;::obj, mem&lt;I&gt;{})</code></td>
+                    </tr>
+                    <tr>
+                        <td>eggs::invoke</td>
+                        <td><code>eggs::invoke(&amp;mem&lt;I&gt;::obj, mem&lt;I&gt;{})</code></td>
+                    </tr>
+                    <tr>
+                        <td>EGGS_INVOKE</td>
+                        <td><code>EGGS_INVOKE(&amp;mem&lt;I&gt;::obj, mem&lt;I&gt;{})</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>member_function <small>(see <a href="https://github.com/eggs-cpp/invoke/blob/benchmark/benchmark/member_function.cpp.in">Source Code</a>)</small></h3>
+            <pre class="code">template &lt;int I&gt;
+struct mem
+{
+    int fun(...) { return I; };
+};
+</pre>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Case</th>
+                        <th>Pattern</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>plain call</td>
+                        <td><code>(mem&lt;I&gt;{}.*(&amp;mem&lt;I&gt;::fun))(1, 2, 3)</code></td>
+                    </tr>
+                    <tr>
+                        <td>std::invoke</td>
+                        <td><code>std::invoke(&amp;mem&lt;I&gt;::fun, mem&lt;I&gt;{}, 1, 2, 3)</code></td>
+                    </tr>
+                    <tr>
+                        <td>eggs::invoke</td>
+                        <td><code>eggs::invoke(&amp;mem&lt;I&gt;::fun, mem&lt;I&gt;{}, 1, 2, 3)</code></td>
+                    </tr>
+                    <tr>
+                        <td>EGGS_INVOKE</td>
+                        <td><code>EGGS_INVOKE(&amp;mem&lt;I&gt;::fun, mem&lt;I&gt;{}, 1, 2, 3)</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>callable <small>(see <a href="https://github.com/eggs-cpp/invoke/blob/benchmark/benchmark/callable.cpp.in">Source Code</a>)</small></h3>
+            <pre class="code">template &lt;int I&gt;
+struct callable {
+    template &lt;typename ...Args&gt;
+    auto operator()(Args&amp;&amp;... args) const
+        noexcept(noexcept(fun&lt;I&gt;(std::forward&lt;Args&gt;(args)...)))
+     -&gt; decltype(fun&lt;I&gt;(std::forward&lt;Args&gt;(args)...))
+    {
+        return fun&lt;I&gt;(std::forward&lt;Args&gt;(args)...);
+    }
+};
+</pre>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Case</th>
+                        <th>Pattern</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>plain call</td>
+                        <td><code>callable&lt;I&gt;{}(1, 2, 3)</code></td>
+                    </tr>
+                    <tr>
+                        <td>std::invoke</td>
+                        <td><code>std::invoke(callable&lt;I&gt;{}, 1, 2, 3)</code></td>
+                    </tr>
+                    <tr>
+                        <td>eggs::invoke</td>
+                        <td><code>eggs::invoke(callable&lt;I&gt;{}, 1, 2, 3)</code></td>
+                    </tr>
+                    <tr>
+                        <td>EGGS_INVOKE</td>
+                        <td><code>EGGS_INVOKE(callable&lt;I&gt;{}, 1, 2, 3)</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>Each pattern is instantiated for different values of <code>I</code>, and aspects of the build are captured: compilation time, memory usage, object size. Results for each benchmark are provided both as absolute values, as well as relative values based on the plain call case.</p>
+            <p>These benchmarks do NOT look at runtime performance. <code>INVOKE</code> is a zero-cost abstraction: no runtime overhead is introduced by its use in an <em>optimized</em> build.</p>
+        </div>
+
+        <div class="results">
+            <section>
+                <a name='results' href='#results'>
+                    <h1>Results</h1>
+                </a>
+                <ul id="results-index"></ul>
+            </section>
+        </div>
+
+        <div id="benchmarks" class="benchmarks"></div>
+
+        <script id="section-tmpl" type="text/x-jsrender">
+            <section id="{{:name}}">
+                <h2><a href="#{{:name}}">{{:name}}</a></h2>
+                <p>Compiler: <strong>{{:compiler}}</strong></p>
+                <p>Build Flags: <strong>{{:build_flags}}</strong></p>
+                <p>Instantiations: <strong>{{:instantiations}}</strong></p>
+                {{for benchmarks ~headers=headers}}
+                <h3>benchmark: {{:benchmark}} <small>(see <a href="https://github.com/eggs-cpp/invoke/blob/benchmark/benchmark/{{:benchmark}}.cpp.in">Source Code</a>)</small></h3>
+                <table>
+                    <tr>
+                        <th>Case</th>
+                        <th>{{:~headers[0]}}</th>
+                        <th>{{:~headers[1]}}</th>
+                        <th>{{:~headers[2]}}</th>
+                    </tr>
+                    <tr>
+                        <td>{{:baseline.case}}</td>
+                        <td>{{:baseline.compilation_time.toFixed(2)}} (1.00)</td>
+                        <td>{{:baseline.memory_usage.toFixed(2)}} (1.00)</td>
+                        <td>{{:baseline.object_size.toFixed(2)}} (1.00)</td>
+                    </tr>
+                    {{for values ~baseline=baseline}}
+                    <tr>
+                        <td>{{:case}}</td>
+                        <td>{{:compilation_time.toFixed(2)}} ({{:(compilation_time / ~baseline.compilation_time).toFixed(2)}})</td>
+                        <td>{{:memory_usage.toFixed(2)}} ({{:(memory_usage / ~baseline.memory_usage).toFixed(2)}})</td>
+                        <td>{{:object_size.toFixed(2)}} ({{:(object_size / ~baseline.object_size).toFixed(2)}})</td>
+                    </tr>
+                    {{/for}}
+                </table>
+                <p>Compiler Explorer: <strong>{{if godbolt}}<a href="{{:godbolt}}">link</a>{{else}}N/A{{/if}}</strong></p>
+                <p>Overheads (less is better):</p>
+                <div id="chart" style="width:500px;height:200px">
+                    <svg data-baseline="{{>~toJson(baseline)}}" data-values="{{>~toJson(values)}}"></svg>
+                </div>
+                {{/for}}
+            </section>
+        </script>
+
+        <script>
+            var $ = window.jsrender;
+            var index_tmpl = $.templates('<li><a href="#{{:name}}" title="{{:name}}">{{:name}}</a></li>');
+            var markup = document.getElementById("section-tmpl").innerHTML;
+            var section_tmpl = $.templates(markup);
+
+            var datum = [gcc_debug, clang_libstdcxx_debug, clang_libcxx_debug, msvc_debug];
+            for (var i = 0; i < datum.length; i++) {
+                var data = datum[i]
+                document.getElementById('results-index').innerHTML += index_tmpl.render({
+                    name: data.name
+                });
+                document.getElementById('benchmarks').innerHTML += section_tmpl.render(data, {
+                    toJson: function (d) { return JSON.stringify(d); }
+                });
+            }
+
+            d3.selectAll('#chart svg').each(function (d) {
+                var baseline = JSON.parse(this.dataset.baseline);
+                var values = JSON.parse(this.dataset.values);
+                displayGraph(this, baseline, values);
+            });
+        </script>
+
+        <hr>
+        <p>
+            Copyright
+            <em>Agust&iacute;n Berg&eacute;</em>,
+            <em>Fusion Fenix</em> 2017-2020
+        </p>
+
+        <p>
+            Distributed under the Boost Software License, Version 1.0. (See accompanying
+            file LICENSE.txt or copy at <a href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</a>)
+        </p>
+    </div>
+</body>
+</html>
