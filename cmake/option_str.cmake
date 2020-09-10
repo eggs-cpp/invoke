@@ -35,6 +35,7 @@ function(option_str variable helpstring)
         "Use the cmake_policy command to set the policy and suppress this warning.\n"
         "For compatibility with older versions of CMake, option_str is clearing "
         "the normal variable '${variable}'.")
+      unset(${variable} PARENT_SCOPE)
     endif()
   endif()
 
